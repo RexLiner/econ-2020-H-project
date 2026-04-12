@@ -10,13 +10,14 @@
 
     :root {
       --blue: #3266ad;
-      --red: #b94040;
-      --bg: #f8f7f4;
+      --red:  #b94040;
+      --green: #2a7a4b;
+      --bg:      #f8f7f4;
       --surface: #ffffff;
-      --border: #e2e0d8;
-      --text: #1a1a18;
-      --muted: #6b6a64;
-      --radius: 10px;
+      --border:  #e2e0d8;
+      --text:    #1a1a18;
+      --muted:   #6b6a64;
+      --radius:  10px;
     }
 
     body {
@@ -38,163 +39,211 @@
     header span { font-size: 0.85rem; color: var(--muted); }
 
     main {
-      max-width: 900px;
+      max-width: 860px;
       margin: 2rem auto;
-      padding: 0 1.5rem;
+      padding: 0 1.5rem 3rem;
     }
 
-    section {
+    .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    section h2 {
-      font-size: 1rem;
-      font-weight: 600;
       margin-bottom: 1.25rem;
-      padding-bottom: 0.75rem;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.7rem;
       border-bottom: 1px solid var(--border);
     }
 
-    /* ── Three-column input layout ── */
-    .input-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
-      align-items: start;
+    /* ── Step labels ── */
+    .step-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
     }
 
-    .input-box {
+    /* ── Equation inputs ── */
+    .eq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.1rem;
+    }
+    .eq-box {
       background: var(--bg);
       border-radius: 8px;
       padding: 1rem 1.1rem;
     }
-    .input-box h3 {
-      font-size: 0.72rem;
+    .eq-box-title {
+      font-size: 0.75rem;
       font-weight: 600;
-      letter-spacing: 0.07em;
       color: var(--muted);
       text-transform: uppercase;
+      letter-spacing: 0.06em;
       margin-bottom: 0.5rem;
     }
-    .curve-formula {
-      font-size: 0.75rem;
+    .eq-box-subtitle {
+      font-size: 0.72rem;
       color: var(--muted);
       font-style: italic;
-      margin-bottom: 0.85rem;
+      margin-bottom: 0.75rem;
     }
-
-    .field-row {
+    .eq-row {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 0.55rem;
     }
-    .field-row label {
-      font-size: 0.8rem;
-      color: var(--muted);
-      width: 82px;
-      flex-shrink: 0;
+    .eq-label {
+      font-size: 1rem;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--text);
     }
-    .field-row input[type="number"] {
+    .eq-label.blue { color: var(--blue); }
+    .eq-label.red  { color: var(--red);  }
+
+    .eq-input {
       flex: 1;
       min-width: 0;
-      padding: 6px 9px;
-      font-size: 0.9rem;
+      padding: 7px 10px;
+      font-size: 0.95rem;
+      font-family: 'Courier New', monospace;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .eq-input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(50,102,173,0.1);
+    }
+    .eq-input.error { border-color: var(--red); }
+
+    .parse-preview {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--green);
+      min-height: 1.1em;
+    }
+    .parse-preview.err { color: var(--red); }
+
+    /* ── Solve area ── */
+    .solve-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .solve-btn {
+      padding: 8px 20px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 7px;
+      background: var(--blue);
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .solve-btn:hover { opacity: 0.87; }
+    .solve-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .solve-output {
+      font-size: 0.88rem;
+      color: var(--muted);
+      flex: 1;
+    }
+    .solve-output strong { color: var(--text); }
+
+    /* ── P* Q* inputs ── */
+    .pq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .pq-box {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+    }
+    .pq-box-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.6rem;
+    }
+    .pq-box-title.blue { color: var(--blue); }
+    .pq-box-title.red  { color: var(--red); }
+
+    .pq-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pq-star {
+      font-size: 1.1rem;
+      font-weight: 700;
+      width: 28px;
+      text-align: center;
+    }
+    .pq-star.blue { color: var(--blue); }
+    .pq-star.red  { color: var(--red); }
+
+    .pq-input {
+      flex: 1;
+      min-width: 0;
+      padding: 7px 10px;
+      font-size: 1rem;
+      font-weight: 600;
       font-family: inherit;
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: 6px;
       background: var(--surface);
       color: var(--text);
       -moz-appearance: textfield;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .field-row input[type="number"]:focus {
+    .pq-input:focus {
       outline: none;
       border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(50,102,173,0.12);
+      box-shadow: 0 0 0 3px rgba(50,102,173,0.1);
     }
-    .field-row input[type="number"]::-webkit-inner-spin-button,
-    .field-row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .pq-input::-webkit-inner-spin-button,
+    .pq-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-    .error-msg {
-      font-size: 0.72rem;
-      color: var(--red);
-      margin-top: 0.3rem;
-      min-height: 1em;
-    }
-
-    /* ── Back-solve box ── */
-    .solve-box {
-      background: #eef3fa;
-      border: 1px solid #c3d4eb;
-      border-radius: 8px;
-      padding: 1rem 1.1rem;
-    }
-    .solve-box h3 {
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.07em;
-      color: var(--blue);
-      text-transform: uppercase;
-      margin-bottom: 0.75rem;
-    }
-    .solve-tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 0.85rem;
-    }
-    .solve-tab {
-      flex: 1;
-      padding: 5px 0;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border: 1px solid #c3d4eb;
-      border-radius: 5px;
-      background: var(--surface);
-      color: var(--muted);
-      cursor: pointer;
-      text-align: center;
-      transition: background 0.12s, color 0.12s;
-    }
-    .solve-tab.active {
-      background: var(--blue);
-      color: #fff;
-      border-color: var(--blue);
-    }
-    .solve-panel { display: none; }
-    .solve-panel.active { display: block; }
-
-    .solve-hint {
-      font-size: 0.72rem;
-      color: var(--muted);
-      font-style: italic;
-      margin: 0.35rem 0 0.5rem;
-    }
-    .solve-btn {
+    .graph-btn {
       width: 100%;
-      margin-top: 0.5rem;
-      padding: 7px 0;
-      font-size: 0.85rem;
-      font-weight: 600;
+      padding: 10px 0;
+      font-size: 0.95rem;
+      font-weight: 700;
       border: none;
-      border-radius: 6px;
-      background: var(--blue);
+      border-radius: 7px;
+      background: var(--green);
       color: #fff;
       cursor: pointer;
       transition: opacity 0.15s;
+      letter-spacing: 0.02em;
     }
-    .solve-btn:hover { opacity: 0.88; }
-    .solve-result {
-      margin-top: 0.55rem;
+    .graph-btn:hover { opacity: 0.87; }
+    .graph-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    .graph-err {
       font-size: 0.75rem;
-      color: var(--muted);
+      color: var(--red);
+      margin-top: 0.5rem;
       min-height: 1em;
-      line-height: 1.4;
     }
 
     /* ── Stats ── */
@@ -210,14 +259,25 @@
       padding: 0.75rem 1rem;
     }
     .stat-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.2rem; }
-    .stat-value { font-size: 1.4rem; font-weight: 600; }
-    .stat-sub { font-size: 0.68rem; color: var(--muted); }
+    .stat-value { font-size: 1.35rem; font-weight: 700; }
+    .stat-sub   { font-size: 0.68rem; color: var(--muted); }
 
     /* ── Chart ── */
-    .chart-container {
+    .chart-wrap {
       position: relative;
       width: 100%;
-      height: 380px;
+      height: 390px;
+    }
+    .chart-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
     }
     .legend {
       display: flex;
@@ -229,11 +289,10 @@
     }
     .legend span { display: flex; align-items: center; gap: 5px; }
     .legend-line { width: 20px; height: 3px; border-radius: 2px; }
-    .legend-dot { width: 9px; height: 9px; border-radius: 50%; background: #1a1a18; }
+    .legend-dot  { width: 9px; height: 9px; border-radius: 50%; }
 
-    @media (max-width: 640px) {
-      .input-section { grid-template-columns: 1fr; }
-      .stats-row { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 580px) {
+      .eq-grid, .pq-grid, .stats-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -245,298 +304,379 @@
 </header>
 
 <main>
-  <section>
-    <h2>Supply &amp; Demand — Equilibrium Calculator</h2>
 
-    <div class="input-section">
+  <!-- ── Step 1: Enter equations ── -->
+  <div class="card">
+    <div class="card-title">Step 1 — Enter Your Equations</div>
+    <div class="step-label">Type your Qd and Qs equations as functions of P</div>
 
-      <!-- Demand -->
-      <div class="input-box">
-        <h3>Demand Curve</h3>
-        <p class="curve-formula">P = a &minus; b &middot; Q</p>
-        <div class="field-row">
-          <label>Intercept (a)</label>
-          <input type="number" id="d-int" value="80" min="0.01" step="1">
+    <div class="eq-grid">
+      <div class="eq-box">
+        <div class="eq-box-title" style="color:var(--blue);">Quantity Demanded</div>
+        <div class="eq-box-subtitle">e.g. &nbsp;−2P + 12 &nbsp;or&nbsp; 10 − 3P</div>
+        <div class="eq-row">
+          <span class="eq-label blue">Qd =</span>
+          <input class="eq-input" id="qd-eq" type="text" placeholder="-2P + 12" spellcheck="false" autocomplete="off">
         </div>
-        <div class="field-row">
-          <label>Slope (b)</label>
-          <input type="number" id="d-slope" value="3" min="0.01" step="0.1">
-        </div>
-        <div class="error-msg" id="d-err"></div>
+        <div class="parse-preview" id="qd-preview"></div>
       </div>
 
-      <!-- Supply -->
-      <div class="input-box">
-        <h3>Supply Curve</h3>
-        <p class="curve-formula">P = c + d &middot; Q</p>
-        <div class="field-row">
-          <label>Intercept (c)</label>
-          <input type="number" id="s-int" value="10" step="1">
+      <div class="eq-box">
+        <div class="eq-box-title" style="color:var(--red);">Quantity Supplied</div>
+        <div class="eq-box-subtitle">e.g. &nbsp;2P − 2 &nbsp;or&nbsp; 0.5P + 1</div>
+        <div class="eq-row">
+          <span class="eq-label red">Qs =</span>
+          <input class="eq-input" id="qs-eq" type="text" placeholder="2P - 2" spellcheck="false" autocomplete="off">
         </div>
-        <div class="field-row">
-          <label>Slope (d)</label>
-          <input type="number" id="s-slope" value="2" min="0.01" step="0.1">
-        </div>
-        <div class="error-msg" id="s-err"></div>
+        <div class="parse-preview" id="qs-preview"></div>
       </div>
-
-      <!-- Back-solve -->
-      <div class="solve-box">
-        <h3>Solve for Target</h3>
-        <div class="solve-tabs">
-          <div class="solve-tab active" id="tab-p" onclick="switchTab('p')">Set P*</div>
-          <div class="solve-tab" id="tab-q" onclick="switchTab('q')">Set Q*</div>
-        </div>
-
-        <div class="solve-panel active" id="panel-p">
-          <div class="field-row">
-            <label>P* =</label>
-            <input type="number" id="target-p" placeholder="e.g. 50" min="0.01" step="1">
-          </div>
-          <p class="solve-hint">Adjusts demand intercept (a) so equilibrium hits this price.</p>
-          <button class="solve-btn" onclick="solveFromP()">Apply P* →</button>
-          <div class="solve-result" id="result-p"></div>
-        </div>
-
-        <div class="solve-panel" id="panel-q">
-          <div class="field-row">
-            <label>Q* =</label>
-            <input type="number" id="target-q" placeholder="e.g. 20" min="0.01" step="1">
-          </div>
-          <p class="solve-hint">Adjusts demand intercept (a) so equilibrium hits this quantity.</p>
-          <button class="solve-btn" onclick="solveFromQ()">Apply Q* →</button>
-          <div class="solve-result" id="result-q"></div>
-        </div>
-      </div>
-
     </div>
 
-    <!-- Stats -->
+    <!-- Solve -->
+    <div class="step-label" style="margin-top:0.25rem;">Step 2 — Solve for Equilibrium</div>
+    <div class="solve-row">
+      <button class="solve-btn" id="solve-btn" onclick="solveEquilibrium()">Solve for P* and Q*</button>
+      <div class="solve-output" id="solve-output">Enter both equations above, then click Solve.</div>
+    </div>
+  </div>
+
+  <!-- ── Step 2: P* Q* and Graph ── -->
+  <div class="card">
+    <div class="card-title">Step 2 — Confirm Values &amp; Generate Graph</div>
+    <div class="step-label" style="margin-bottom:0.85rem;">
+      Values are filled automatically after solving — or enter them manually.
+    </div>
+
+    <div class="pq-grid">
+      <div class="pq-box">
+        <div class="pq-box-title blue">Equilibrium Price</div>
+        <div class="pq-row">
+          <span class="pq-star blue">P*</span>
+          <input class="pq-input" id="p-star" type="number" placeholder="—" step="any">
+        </div>
+      </div>
+      <div class="pq-box">
+        <div class="pq-box-title red">Equilibrium Quantity</div>
+        <div class="pq-row">
+          <span class="pq-star red">Q*</span>
+          <input class="pq-input" id="q-star" type="number" placeholder="—" step="any">
+        </div>
+      </div>
+    </div>
+
+    <button class="graph-btn" id="graph-btn" onclick="drawGraph()">Generate Graph</button>
+    <div class="graph-err" id="graph-err"></div>
+  </div>
+
+  <!-- ── Graph output ── -->
+  <div class="card" id="graph-card" style="display:none;">
+    <div class="card-title">Supply &amp; Demand Graph</div>
+
     <div class="stats-row">
       <div class="stat">
         <div class="stat-label">Equilibrium Price</div>
-        <div class="stat-value" id="eq-price">—</div>
+        <div class="stat-value" id="stat-p">—</div>
         <div class="stat-sub">P*</div>
       </div>
       <div class="stat">
         <div class="stat-label">Equilibrium Quantity</div>
-        <div class="stat-value" id="eq-qty">—</div>
+        <div class="stat-value" id="stat-q">—</div>
         <div class="stat-sub">Q*</div>
       </div>
       <div class="stat">
         <div class="stat-label">Total Revenue</div>
-        <div class="stat-value" id="tot-rev">—</div>
-        <div class="stat-sub">P* &times; Q*</div>
+        <div class="stat-value" id="stat-tr">—</div>
+        <div class="stat-sub">P* × Q*</div>
       </div>
     </div>
 
-    <!-- Chart -->
-    <div class="chart-container">
-      <canvas id="sdChart" role="img" aria-label="Supply and demand curves with equilibrium point marked"></canvas>
+    <div class="chart-wrap">
+      <canvas id="sdChart" role="img" aria-label="Supply and demand graph"></canvas>
     </div>
     <div class="legend">
-      <span><span class="legend-line" style="background:#3266ad;"></span>Demand</span>
-      <span><span class="legend-line" style="background:#b94040;"></span>Supply</span>
-      <span><span class="legend-dot"></span>Equilibrium (P*, Q*)</span>
+      <span><span class="legend-line" style="background:#3266ad;"></span>Demand (Qd)</span>
+      <span><span class="legend-line" style="background:#b94040;"></span>Supply (Qs)</span>
+      <span><span class="legend-dot" style="background:#1a1a18;border:2px solid #fff;outline:1px solid #aaa;"></span>Equilibrium</span>
     </div>
+  </div>
 
-  </section>
 </main>
 
 <script>
-// ── Tab toggle ────────────────────────────────────────────
-function switchTab(mode) {
-  ['p','q'].forEach(t => {
-    document.getElementById('tab-' + t).classList.toggle('active', t === mode);
-    document.getElementById('panel-' + t).classList.toggle('active', t === mode);
+// ═══════════════════════════════════════════════════════
+//  EQUATION PARSER
+//  Parses expressions like "-2P + 12", "0.5P - 3", "10"
+//  Returns { pCoeff, constant } so Q = pCoeff*P + constant
+// ═══════════════════════════════════════════════════════
+function parseEquation(raw) {
+  let s = raw.trim();
+  if (!s) return null;
+
+  // Normalise: remove spaces, make signs explicit
+  s = s.replace(/\s+/g, '');
+
+  // Must contain only digits, P, p, +, -, *, ., (nothing else)
+  if (/[^0-9Pp+\-*.]/.test(s)) return null;
+
+  // Canonical: uppercase P, explicit leading +
+  s = s.replace(/p/g, 'P');
+  if (s[0] !== '-') s = '+' + s;
+
+  // Split into terms on + or - (keep sign with term)
+  const terms = s.match(/[+\-][^+\-]+/g);
+  if (!terms) return null;
+
+  let pCoeff = 0, constant = 0;
+
+  for (let term of terms) {
+    // Does it contain P?
+    if (term.includes('P')) {
+      // e.g. "+2P", "-2*P", "-P", "+P", "+2.5P"
+      let c = term.replace(/\*?P/, '');   // strip P (and optional *)
+      if (c === '+' || c === '')  c = '+1';
+      if (c === '-')              c = '-1';
+      const val = parseFloat(c);
+      if (isNaN(val)) return null;
+      pCoeff += val;
+    } else {
+      const val = parseFloat(term);
+      if (isNaN(val)) return null;
+      constant += val;
+    }
+  }
+
+  return { pCoeff, constant };
+}
+
+function describeEq(parsed, label) {
+  if (!parsed) return '';
+  const { pCoeff, constant } = parsed;
+  let parts = [];
+  if (pCoeff !== 0) parts.push((pCoeff === 1 ? '' : pCoeff === -1 ? '-' : pCoeff) + 'P');
+  if (constant !== 0 || parts.length === 0) parts.push(constant);
+  // Format nicely
+  let str = parts.map((p, i) => {
+    const s = String(p);
+    if (i === 0) return s;
+    return (s[0] === '-') ? ' − ' + s.slice(1) : ' + ' + s;
+  }).join('');
+  return label + ' = ' + str;
+}
+
+// ── Live parsing preview ──────────────────────────────
+function livePreview(inputId, previewId, label) {
+  const raw = document.getElementById(inputId).value;
+  const el  = document.getElementById(previewId);
+  if (!raw.trim()) { el.textContent = ''; el.className = 'parse-preview'; return null; }
+  const parsed = parseEquation(raw);
+  if (!parsed) {
+    el.textContent = '⚠ Could not parse. Use format like: -2P + 12';
+    el.className = 'parse-preview err';
+    document.getElementById(inputId).classList.add('error');
+    return null;
+  }
+  el.textContent = '✓ Parsed as ' + describeEq(parsed, label);
+  el.className = 'parse-preview';
+  document.getElementById(inputId).classList.remove('error');
+  return parsed;
+}
+
+document.getElementById('qd-eq').addEventListener('input', () => livePreview('qd-eq','qd-preview','Qd'));
+document.getElementById('qs-eq').addEventListener('input', () => livePreview('qs-eq','qs-preview','Qs'));
+
+// ═══════════════════════════════════════════════════════
+//  SOLVE
+//  Qd = Qs  →  qdCoeff*P + qdConst = qsCoeff*P + qsConst
+//  P*(qdCoeff - qsCoeff) = qsConst - qdConst
+//  P* = (qsConst - qdConst) / (qdCoeff - qsCoeff)
+//  Q* = qdCoeff*P* + qdConst
+// ═══════════════════════════════════════════════════════
+let _qdParsed = null, _qsParsed = null;
+
+function solveEquilibrium() {
+  _qdParsed = livePreview('qd-eq','qd-preview','Qd');
+  _qsParsed = livePreview('qs-eq','qs-preview','Qs');
+  const out = document.getElementById('solve-output');
+
+  if (!_qdParsed || !_qsParsed) {
+    out.textContent = 'Fix the equation errors above first.';
+    return;
+  }
+
+  const { pCoeff: qd_p, constant: qd_c } = _qdParsed;
+  const { pCoeff: qs_p, constant: qs_c } = _qsParsed;
+
+  const denom = qd_p - qs_p;
+  if (Math.abs(denom) < 1e-10) {
+    out.innerHTML = 'The curves are parallel — no unique equilibrium exists.';
+    return;
+  }
+
+  const pStar = (qs_c - qd_c) / denom;
+  const qStar = qd_p * pStar + qd_c;
+
+  if (pStar < 0 || qStar < 0) {
+    out.innerHTML =
+      `Solved: P* = ${fmt(pStar)}, Q* = ${fmt(qStar)} — but the equilibrium is negative, ` +
+      `which means these curves don't intersect in the positive market region. Check your equations.`;
+    return;
+  }
+
+  // Fill in the P* Q* boxes
+  document.getElementById('p-star').value = roundTo(pStar, 4);
+  document.getElementById('q-star').value = roundTo(qStar, 4);
+
+  out.innerHTML =
+    `<strong>P* = ${fmt(pStar)}</strong>, <strong>Q* = ${fmt(qStar)}</strong> — values entered below.`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRAPH
+// ═══════════════════════════════════════════════════════
+let chart = null;
+
+function drawGraph() {
+  const errEl = document.getElementById('graph-err');
+  errEl.textContent = '';
+
+  const pStar = parseFloat(document.getElementById('p-star').value);
+  const qStar = parseFloat(document.getElementById('q-star').value);
+
+  if (isNaN(pStar) || isNaN(qStar)) {
+    errEl.textContent = 'Enter valid values for both P* and Q* (or click Solve first).';
+    return;
+  }
+  if (pStar <= 0 || qStar <= 0) {
+    errEl.textContent = 'P* and Q* must both be positive.';
+    return;
+  }
+
+  // Re-parse equations (user may have typed manually)
+  const qdP = livePreview('qd-eq','qd-preview','Qd');
+  const qsP = livePreview('qs-eq','qs-preview','Qs');
+
+  // Build curve data as (P on Y-axis, Q on X-axis)
+  // For each Q, invert: P = (Q - constant) / pCoeff
+  // Demand: P ranges from 0 up to P-intercept (where Q=0)
+  // We'll sweep P from 0 to pMax and compute Q for each
+
+  const pMax  = Math.ceil(pStar * 2.2 / 5) * 5;
+  const steps = 200;
+
+  function curvePoints(parsed) {
+    const pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const P = (i / steps) * pMax;
+      const Q = parsed.pCoeff * P + parsed.constant;
+      if (Q >= 0) pts.push({ x: Q, y: P });
+    }
+    return pts;
+  }
+
+  // Fallback if no equations: draw straight lines through equilibrium
+  // using default slopes
+  let demandPts, supplyPts;
+
+  if (qdP && qsP) {
+    demandPts = curvePoints(qdP);
+    supplyPts = curvePoints(qsP);
+  } else {
+    // Can't draw without valid equations
+    errEl.textContent = 'Please enter valid Qd and Qs equations to generate the graph.';
+    return;
+  }
+
+  const qMax = Math.ceil(qStar * 2.2 / 5) * 5;
+
+  // Show graph card
+  document.getElementById('graph-card').style.display = 'block';
+  document.getElementById('graph-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Stats
+  document.getElementById('stat-p').textContent  = '$' + fmt(pStar);
+  document.getElementById('stat-q').textContent  = fmt(qStar);
+  document.getElementById('stat-tr').textContent = '$' + fmt(pStar * qStar);
+
+  // Build or update chart
+  const ctx = document.getElementById('sdChart').getContext('2d');
+
+  if (chart) { chart.destroy(); chart = null; }
+
+  chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Demand (Qd)',
+          data: demandPts,
+          showLine: true,
+          borderColor: '#3266ad',
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+          borderWidth: 2.5,
+          tension: 0
+        },
+        {
+          label: 'Supply (Qs)',
+          data: supplyPts,
+          showLine: true,
+          borderColor: '#b94040',
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+          borderWidth: 2.5,
+          tension: 0
+        },
+        {
+          label: 'Equilibrium',
+          data: [{ x: qStar, y: pStar }],
+          showLine: false,
+          pointRadius: 9,
+          pointBackgroundColor: '#1a1a18',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2.5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (c) => {
+              if (c.datasetIndex === 2)
+                return `Equilibrium — Q* = ${fmt(c.parsed.x)}, P* = $${fmt(c.parsed.y)}`;
+              return `${c.dataset.label}: Q = ${fmt(c.parsed.x)} at P = $${fmt(c.parsed.y)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Quantity (Q)', font: { size: 12 }, color: '#6b6a64' },
+          min: 0, max: qMax,
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          ticks: { color: '#6b6a64' }
+        },
+        y: {
+          title: { display: true, text: 'Price (P)', font: { size: 12 }, color: '#6b6a64' },
+          min: 0, max: pMax,
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          ticks: { color: '#6b6a64', callback: v => '$' + v }
+        }
+      }
+    }
   });
 }
 
-// ── Helpers ───────────────────────────────────────────────
-function readNum(id) { return parseFloat(document.getElementById(id).value); }
-function setVal(id, v) { document.getElementById(id).value = v; }
-function setText(id, v) { document.getElementById(id).textContent = v; }
-
-// ── Validation ────────────────────────────────────────────
-function validate() {
-  const dInt = readNum('d-int'), dSlope = readNum('d-slope');
-  const sInt = readNum('s-int'), sSlope = readNum('s-slope');
-  setText('d-err', '');
-  setText('s-err', '');
-  let ok = true;
-
-  if (isNaN(dInt) || isNaN(dSlope) || dSlope <= 0) {
-    setText('d-err', 'Enter valid positive values.');
-    ok = false;
-  }
-  if (isNaN(sInt) || isNaN(sSlope) || sSlope <= 0) {
-    setText('s-err', 'Enter valid positive values.');
-    ok = false;
-  }
-  if (ok && dInt <= sInt) {
-    setText('d-err', 'Demand intercept (a) must be greater than supply intercept (c).');
-    ok = false;
-  }
-  return ok;
+// ── Utilities ─────────────────────────────────────────
+function roundTo(v, dp) { return Math.round(v * 10**dp) / 10**dp; }
+function fmt(v) {
+  // Show up to 2 decimal places, trimming trailing zeros
+  return parseFloat(v.toFixed(2)).toString();
 }
-
-// ── Core math ─────────────────────────────────────────────
-// Demand:  P = dInt − dSlope·Q
-// Supply:  P = sInt + sSlope·Q
-// Equilibrium:
-//   dInt − dSlope·Q = sInt + sSlope·Q
-//   Q* = (dInt − sInt) / (dSlope + sSlope)
-//   P* = sInt + sSlope·Q*
-
-function calcEquilibrium(dInt, dSlope, sInt, sSlope) {
-  const eqQ = (dInt - sInt) / (dSlope + sSlope);
-  const eqP = sInt + sSlope * eqQ;
-  return { eqQ, eqP };
-}
-
-function buildCurves(dInt, dSlope, sInt, sSlope, maxQ) {
-  const n = Math.ceil(maxQ) + 1;
-  const pts = Array.from({ length: n }, (_, i) => i);
-  return {
-    demand: pts.map(q => ({ x: q, y: Math.max(0, dInt - dSlope * q) })),
-    supply: pts.map(q => ({ x: q, y: sInt + sSlope * q }))
-  };
-}
-
-// ── Back-solve: given desired P*, find demand intercept a ─
-// From: P* = sInt + sSlope · (dInt−sInt)/(dSlope+sSlope)
-// Solving for dInt:
-//   P*(dSlope+sSlope) = sInt·dSlope + sSlope·dInt
-//   dInt = (P*·(dSlope+sSlope) − sInt·dSlope) / sSlope
-function solveFromP() {
-  if (!validate()) return;
-  const targetP = readNum('target-p');
-  const dSlope = readNum('d-slope'), sInt = readNum('s-int'), sSlope = readNum('s-slope');
-  if (isNaN(targetP) || targetP <= 0) {
-    setText('result-p', 'Please enter a valid positive price.');
-    return;
-  }
-  if (targetP <= sInt) {
-    setText('result-p', `P* must be greater than the supply intercept (c = ${sInt}).`);
-    return;
-  }
-  const newA = (targetP * (dSlope + sSlope) - sInt * dSlope) / sSlope;
-  setVal('d-int', newA.toFixed(4));
-  setText('result-p', `Demand intercept (a) set to ${newA.toFixed(2)} → P* = $${targetP}`);
-  updateAll();
-}
-
-// ── Back-solve: given desired Q*, find demand intercept a ─
-// From: Q* = (dInt − sInt) / (dSlope + sSlope)
-// → dInt = Q*·(dSlope+sSlope) + sInt
-function solveFromQ() {
-  if (!validate()) return;
-  const targetQ = readNum('target-q');
-  const dSlope = readNum('d-slope'), sInt = readNum('s-int'), sSlope = readNum('s-slope');
-  if (isNaN(targetQ) || targetQ <= 0) {
-    setText('result-q', 'Please enter a valid positive quantity.');
-    return;
-  }
-  const newA = targetQ * (dSlope + sSlope) + sInt;
-  setVal('d-int', newA.toFixed(4));
-  setText('result-q', `Demand intercept (a) set to ${newA.toFixed(2)} → Q* = ${targetQ}`);
-  updateAll();
-}
-
-// ── Chart ─────────────────────────────────────────────────
-const ctx = document.getElementById('sdChart').getContext('2d');
-const chart = new Chart(ctx, {
-  type: 'scatter',
-  data: {
-    datasets: [
-      {
-        label: 'Demand', data: [], showLine: true,
-        borderColor: '#3266ad', backgroundColor: 'transparent',
-        pointRadius: 0, borderWidth: 2.5, tension: 0
-      },
-      {
-        label: 'Supply', data: [], showLine: true,
-        borderColor: '#b94040', backgroundColor: 'transparent',
-        pointRadius: 0, borderWidth: 2.5, tension: 0
-      },
-      {
-        label: 'Equilibrium', data: [], showLine: false,
-        pointRadius: 8,
-        pointBackgroundColor: '#1a1a18',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: { duration: 180 },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (c) => {
-            if (c.datasetIndex === 2)
-              return `Equilibrium — Q*: ${c.parsed.x.toFixed(2)}, P*: $${c.parsed.y.toFixed(2)}`;
-            return `${c.dataset.label}: P = $${c.parsed.y.toFixed(2)}`;
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        title: { display: true, text: 'Quantity (Q)', font: { size: 12 }, color: '#6b6a64' },
-        min: 0,
-        grid: { color: 'rgba(0,0,0,0.06)' },
-        ticks: { color: '#6b6a64' }
-      },
-      y: {
-        title: { display: true, text: 'Price (P)', font: { size: 12 }, color: '#6b6a64' },
-        min: 0,
-        grid: { color: 'rgba(0,0,0,0.06)' },
-        ticks: { color: '#6b6a64', callback: v => '$' + v }
-      }
-    }
-  }
-});
-
-// ── Main update ───────────────────────────────────────────
-function updateAll() {
-  if (!validate()) return;
-
-  const dInt = readNum('d-int'), dSlope = readNum('d-slope');
-  const sInt = readNum('s-int'), sSlope = readNum('s-slope');
-  const { eqQ, eqP } = calcEquilibrium(dInt, dSlope, sInt, sSlope);
-
-  if (eqQ < 0 || eqP < 0) {
-    setText('d-err', 'No valid positive equilibrium with these values.');
-    return;
-  }
-
-  const maxQ = Math.max(Math.ceil(eqQ * 2), 10);
-  const maxP = Math.ceil(Math.max(dInt, eqP * 1.5) / 10) * 10;
-
-  const { demand, supply } = buildCurves(dInt, dSlope, sInt, sSlope, maxQ);
-
-  chart.data.datasets[0].data = demand;
-  chart.data.datasets[1].data = supply;
-  chart.data.datasets[2].data = [{ x: eqQ, y: eqP }];
-  chart.options.scales.x.max = maxQ;
-  chart.options.scales.y.max = maxP;
-  chart.update('none');
-
-  setText('eq-price', '$' + eqP.toFixed(2));
-  setText('eq-qty', eqQ.toFixed(2));
-  setText('tot-rev', '$' + (eqP * eqQ).toFixed(2));
-}
-
-// ── Wire all number inputs ────────────────────────────────
-['d-int', 'd-slope', 's-int', 's-slope'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updateAll);
-});
-
-updateAll();
 </script>
 </body>
 </html>
