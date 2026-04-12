@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Microeconomics Explorer — Econ 2020</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #3266ad;
+      --red: #b94040;
+      --green: #2e8b57;
+      --bg: #f8f7f4;
+      --surface: #ffffff;
+      --border: #e2e0d8;
+      --text: #1a1a18;
+      --muted: #6b6a64;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.25rem; font-weight: 600; }
+    header span { font-size: 0.85rem; color: var(--muted); }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Controls */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .ctrl-box {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .ctrl-box h3 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.5rem;
+    }
+    .slider-row label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      width: 70px;
+      flex-shrink: 0;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--blue);
+    }
+    .slider-row span {
+      font-size: 0.8rem;
+      font-weight: 600;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.2rem; }
+    .stat-value { font-size: 1.4rem; font-weight: 600; }
+    .stat-sub { font-size: 0.7rem; color: var(--muted); }
+
+    /* Chart */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 380px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1.25rem;
+      justify-content: center;
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-line {
+      width: 20px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #222;
+    }
+
+    @media (max-width: 600px) {
+      .controls-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Microeconomics Explorer</h1>
+  <span>Econ 2020 — Honors Project</span>
+</header>
+
+<main>
+
+  <!-- Supply & Demand Section -->
+  <section>
+    <h2>Supply &amp; Demand — Equilibrium Calculator</h2>
+
+    <div class="controls-grid">
+      <div class="ctrl-box">
+        <h3>Demand Curve</h3>
+        <div class="slider-row">
+          <label>Intercept</label>
+          <input type="range" id="d-int" min="20" max="120" value="80" step="1">
+          <span id="d-int-v">80</span>
+        </div>
+        <div class="slider-row">
+          <label>Slope</label>
+          <input type="range" id="d-slope" min="1" max="10" value="3" step="1">
+          <span id="d-slope-v">3</span>
+        </div>
+      </div>
+      <div class="ctrl-box">
+        <h3>Supply Curve</h3>
+        <div class="slider-row">
+          <label>Intercept</label>
+          <input type="range" id="s-int" min="0" max="60" value="10" step="1">
+          <span id="s-int-v">10</span>
+        </div>
+        <div class="slider-row">
+          <label>Slope</label>
+          <input type="range" id="s-slope" min="1" max="10" value="2" step="1">
+          <span id="s-slope-v">2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-label">Equilibrium Price</div>
+        <div class="stat-value" id="eq-price">$42.0</div>
+        <div class="stat-sub">P*</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Equilibrium Quantity</div>
+        <div class="stat-value" id="eq-qty">14.0</div>
+        <div class="stat-sub">Q*</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value" id="tot-rev">$588</div>
+        <div class="stat-sub">P* × Q*</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="sdChart" role="img" aria-label="Supply and demand curve graph with equilibrium point"></canvas>
+    </div>
+
+    <div class="legend">
+      <span><span class="legend-line" style="background: var(--blue);"></span> Demand</span>
+      <span><span class="legend-line" style="background: var(--red);"></span> Supply</span>
+      <span><span class="legend-dot"></span> Equilibrium (P*, Q*)</span>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────
+  function get(id) { return parseFloat(document.getElementById(id).value); }
+  function setText(id, val) { document.getElementById(id).textContent = val; }
+
+  function calcEquilibrium() {
+    const dInt  = get('d-int'),  dSlope = get('d-slope');
+    const sInt  = get('s-int'),  sSlope = get('s-slope');
+    // Demand: P = dInt - dSlope*Q
+    // Supply: P = sInt + sSlope*Q
+    // At equilibrium: dInt - dSlope*Q = sInt + sSlope*Q
+    const eqQ = (dInt - sInt) / (dSlope + sSlope);
+    const eqP = sInt + sSlope * eqQ;
+    return { eqQ, eqP, dInt, dSlope, sInt, sSlope };
+  }
+
+  function buildCurveData(dInt, dSlope, sInt, sSlope) {
+    const pts = Array.from({ length: 31 }, (_, i) => i);
+    const demand = pts.map(q => ({ x: q, y: Math.max(0, dInt - dSlope * q) }));
+    const supply = pts.map(q => ({ x: q, y: sInt + sSlope * q }));
+    return { demand, supply };
+  }
+
+  // ── Chart ────────────────────────────────────────────────
+  const ctx = document.getElementById('sdChart').getContext('2d');
+  const { eqQ, eqP, dInt, dSlope, sInt, sSlope } = calcEquilibrium();
+  const { demand, supply } = buildCurveData(dInt, dSlope, sInt, sSlope);
+
+  const chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Demand',
+          data: demand,
+          showLine: true,
+          borderColor: '#3266ad',
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+          borderWidth: 2.5,
+          tension: 0
+        },
+        {
+          label: 'Supply',
+          data: supply,
+          showLine: true,
+          borderColor: '#b94040',
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+          borderWidth: 2.5,
+          tension: 0
+        },
+        {
+          label: 'Equilibrium',
+          data: [{ x: eqQ, y: eqP }],
+          showLine: false,
+          pointRadius: 8,
+          pointBackgroundColor: '#222',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 100 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              if (ctx.datasetIndex === 2)
+                return `Equilibrium — Q*: ${ctx.parsed.x.toFixed(1)}, P*: $${ctx.parsed.y.toFixed(1)}`;
+              return `${ctx.dataset.label}: P = $${ctx.parsed.y.toFixed(1)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Quantity (Q)', font: { size: 12 }, color: '#6b6a64' },
+          min: 0, max: 30,
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          ticks: { color: '#6b6a64', stepSize: 5 }
+        },
+        y: {
+          title: { display: true, text: 'Price (P)', font: { size: 12 }, color: '#6b6a64' },
+          min: 0, max: 130,
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          ticks: { color: '#6b6a64', callback: v => '$' + v }
+        }
+      }
+    }
+  });
+
+  function updateAll() {
+    const { eqQ, eqP, dInt, dSlope, sInt, sSlope } = calcEquilibrium();
+    const { demand, supply } = buildCurveData(dInt, dSlope, sInt, sSlope);
+    chart.data.datasets[0].data = demand;
+    chart.data.datasets[1].data = supply;
+    chart.data.datasets[2].data = [{ x: eqQ, y: eqP }];
+    chart.update('none');
+    setText('eq-price', '$' + eqP.toFixed(1));
+    setText('eq-qty', eqQ.toFixed(1));
+    setText('tot-rev', '$' + (eqP * eqQ).toFixed(0));
+  }
+
+  ['d-int','d-slope','s-int','s-slope'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function () {
+      document.getElementById(id + '-v').textContent = this.value;
+      updateAll();
+    });
+  });
+</script>
+</body>
+</html>
