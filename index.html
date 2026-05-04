@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Microeconomics Explorer — Econ 2020</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:   #3266ad;
+      --red:    #b94040;
+      --green:  #2a7a4b;
+      --purple: #7c3aab;
+      --orange: #c96a12;
+      --teal:   #1a7a7a;
+      --bg:      #f8f7f4;
+      --surface: #ffffff;
+      --border:  #e2e0d8;
+      --text:    #1a1a18;
+      --muted:   #6b6a64;
+      --radius:  10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+    }
+
+    header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 1.1rem 2rem; display: flex; align-items: baseline; gap: 1rem;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header span { font-size: 0.85rem; color: var(--muted); }
+
+    .tab-bar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; padding: 0 2rem;
+    }
+    .tab-btn {
+      padding: 0.7rem 1.2rem; font-size: 0.87rem; font-weight: 600;
+      border: none; background: none; color: var(--muted); cursor: pointer;
+      border-bottom: 3px solid transparent; margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    main { max-width: 1000px; margin: 1.5rem auto; padding: 0 1.25rem 3rem; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.4rem; margin-bottom: 1.1rem;
+    }
+    .card-title {
+      font-size: 0.93rem; font-weight: 600; margin-bottom: 1rem;
+      padding-bottom: 0.65rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .badge {
+      font-size: 0.63rem; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; padding: 2px 7px; border-radius: 20px;
+      background: var(--bg); color: var(--muted); border: 1px solid var(--border);
+    }
+
+    /* ── shared form elements ── */
+    .step-lbl {
+      font-size: 0.67rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .55rem;
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; }
+    .four-col { display: grid; grid-template-columns: repeat(4,1fr); gap: .75rem; }
+
+    .input-box {
+      background: var(--bg); border-radius: 8px; padding: .95rem 1.05rem;
+    }
+    .input-box-title {
+      font-size: .73rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: .35rem;
+    }
+    .input-box-sub { font-size: .7rem; color: var(--muted); font-style: italic; margin-bottom: .65rem; }
+
+    .eq-row { display: flex; align-items: center; gap: 7px; }
+    .eq-lbl { font-size: .98rem; font-weight: 700; white-space: nowrap; }
+
+    input[type="text"].mono-in, input[type="number"].num-in {
+      flex: 1; min-width: 0; padding: 6px 9px; font-size: .9rem;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      background: var(--surface); color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input[type="text"].mono-in { font-family: 'Courier New', monospace; }
+    input[type="number"].num-in { -moz-appearance: textfield; font-family: inherit; font-weight: 600; }
+    input[type="number"].num-in::-webkit-inner-spin-button,
+    input[type="number"].num-in::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(50,102,173,.1); }
+    input.error { border-color: var(--red) !important; }
+
+    .parse-ok  { font-size: .72rem; color: var(--green); margin-top: .4rem; min-height: 1em; }
+    .parse-err { font-size: .72rem; color: var(--red);   margin-top: .4rem; min-height: 1em; }
+
+    /* buttons */
+    .btn {
+      padding: 7px 18px; font-size: .87rem; font-weight: 600; border: none;
+      border-radius: 7px; cursor: pointer; transition: opacity .15s; white-space: nowrap;
+    }
+    .btn:hover { opacity: .87; }
+    .btn-blue   { background: var(--blue);   color: #fff; }
+    .btn-green  { background: var(--green);  color: #fff; }
+    .btn-purple { background: var(--purple); color: #fff; }
+    .btn-full   { width: 100%; padding: 9px 0; font-size: .92rem; font-weight: 700; }
+
+    .solve-row { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+    .solve-out { font-size: .87rem; color: var(--muted); flex: 1; }
+    .solve-out strong { color: var(--text); }
+
+    /* stat tiles */
+    .stat {
+      background: var(--bg); border-radius: 8px; padding: .7rem .95rem;
+    }
+    .stat-lbl { font-size: .7rem; color: var(--muted); margin-bottom: .15rem; }
+    .stat-val { font-size: 1.2rem; font-weight: 700; }
+    .stat-sub { font-size: .65rem; color: var(--muted); }
+    .stat.profit    { background: #e6f4ec; }
+    .stat.loss      { background: #faeaea; }
+    .stat.breakeven { background: #fef9e7; }
+
+    /* err */
+    .err-msg { font-size: .72rem; color: var(--red); margin-top: .4rem; min-height: 1em; }
+
+    /* ── DUAL CHART LAYOUT (matches worksheet side-by-side) ── */
+    .dual-chart-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .chart-panel { }
+    .chart-panel-title {
+      font-size: .78rem; font-weight: 700; text-align: center;
+      color: var(--muted); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .chart-wrap { position: relative; width: 100%; height: 320px; }
+
+    /* legend */
+    .legend {
+      display: flex; gap: .85rem; flex-wrap: wrap; justify-content: center;
+      margin-top: .6rem; font-size: .75rem; color: var(--muted);
+    }
+    .legend span { display: flex; align-items: center; gap: 4px; }
+    .leg-line { width: 16px; height: 3px; border-radius: 2px; }
+    .leg-dash { width: 16px; border-top: 2.5px dashed; }
+    .leg-dot  { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── Analysis box (π, Q_max, P vs ATC, entry/exit) ── */
+    .analysis-card {
+      background: #f0f5ff;
+      border: 1px solid #c3d4eb;
+      border-radius: 8px;
+      padding: 1.1rem 1.2rem;
+      margin-top: 0;
+    }
+    .analysis-title {
+      font-size: .78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--blue); margin-bottom: .85rem;
+    }
+    .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .analysis-item { }
+    .analysis-item label {
+      font-size: .72rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: .3rem;
+    }
+    .analysis-value {
+      font-size: 1.05rem; font-weight: 700; color: var(--text);
+    }
+    .analysis-formula {
+      font-size: .78rem; color: var(--muted); margin-top: .15rem;
+    }
+    .pill-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
+    .pill {
+      font-size: .78rem; font-weight: 600; padding: 3px 11px; border-radius: 20px;
+      border: 1.5px solid var(--border); color: var(--muted); background: var(--surface);
+    }
+    .pill.active-green { background: #e6f4ec; border-color: var(--green); color: var(--green); }
+    .pill.active-red   { background: #faeaea; border-color: var(--red);   color: var(--red); }
+    .pill.active-blue  { background: #e8f0fb; border-color: var(--blue);  color: var(--blue); }
+
+    /* price input section */
+    .price-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .5rem; }
+    .price-row label { font-size: .82rem; color: var(--muted); white-space: nowrap; }
+    .use-mkt-btn {
+      font-size: .73rem; color: var(--blue); background: none; border: none;
+      cursor: pointer; text-decoration: underline; padding: 0; display: block; margin-top: .25rem;
+    }
+
+    @media (max-width: 680px) {
+      .two-col, .three-col, .four-col, .dual-chart-wrap, .analysis-grid { grid-template-columns: 1fr; }
+      .chart-wrap { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Microeconomics Explorer</h1>
+  <span>Econ 2020 — Honors Project</span>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('market', this)">📈 Market Equilibrium</button>
+  <button class="tab-btn" onclick="showTab('firm', this)">🏢 Monopoly Analysis</button>
+  <button class="tab-btn" onclick="showTab('controls', this)">📉 Price Controls</button>
+  <button class="tab-btn" onclick="showTab('surplus', this)">📐 Surplus &amp; Welfare</button>
+</div>
+
+<main>
+
+  <!-- ════════════════════════════════════
+       TAB 1 — MARKET EQUILIBRIUM
+  ════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-market">
+
+    <div class="card">
+      <div class="card-title">Step 1 — Enter Equations <span class="badge">as functions of P</span></div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Quantity Demanded (Qd)</div>
+          <div class="input-box-sub">e.g. −2P + 12 &nbsp;·&nbsp; 10 − 3P</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">Qd =</span>
+            <input class="mono-in" id="qd-eq" type="text" placeholder="-2P + 12" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="qd-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Quantity Supplied (Qs)</div>
+          <div class="input-box-sub">e.g. 2P − 2 &nbsp;·&nbsp; 0.5P + 1</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">Qs =</span>
+            <input class="mono-in" id="qs-eq" type="text" placeholder="2P - 2" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="qs-preview"></div>
+        </div>
+      </div>
+      <div class="step-lbl">Step 2 — Solve for equilibrium</div>
+      <div class="solve-row">
+        <button class="btn btn-blue" onclick="solveEquilibrium()">Solve for P* and Q*</button>
+        <div class="solve-out" id="solve-output">Enter both equations above, then click Solve.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Step 2 — Confirm Values &amp; Generate Graph</div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Equilibrium Price</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">P* =</span>
+            <input class="num-in" id="p-star" type="number" placeholder="—" step="any">
+          </div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Equilibrium Quantity</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">Q* =</span>
+            <input class="num-in" id="q-star" type="number" placeholder="—" step="any">
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="drawMarketGraph()">Generate Market Graph</button>
+      <div class="err-msg" id="market-err"></div>
+    </div>
+
+    <div class="card" id="market-graph-card" style="display:none;">
+      <div class="card-title">Market Supply &amp; Demand</div>
+      <div class="three-col" style="margin-bottom:1.1rem;">
+        <div class="stat">
+          <div class="stat-lbl">Market Price</div>
+          <div class="stat-val" id="mstat-p">—</div>
+          <div class="stat-sub">P*</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Market Quantity</div>
+          <div class="stat-val" id="mstat-q">—</div>
+          <div class="stat-sub">Q*</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Total Revenue</div>
+          <div class="stat-val" id="mstat-tr">—</div>
+          <div class="stat-sub">P* × Q*</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="marketChart"></canvas></div>
+      <div class="legend">
+        <span><span class="leg-line" style="background:var(--blue);"></span>Demand (D)</span>
+        <span><span class="leg-line" style="background:var(--red);"></span>Supply (S)</span>
+        <span><span class="leg-dot" style="background:#1a1a18;"></span>Equilibrium (P*, Q*)</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 2 — MONOPOLY ANALYSIS
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-firm">
+
+    <!-- Step 1: Enter equations -->
+    <div class="card">
+      <div class="card-title">Step 1 — Enter Equations <span class="badge">as functions of Q</span></div>
+
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Demand (P as function of Q)</div>
+          <div class="input-box-sub">e.g.&nbsp; 12 − 2Q &nbsp;·&nbsp; 10 − Q &nbsp;·&nbsp; 20 − 3Q</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">P =</span>
+            <input class="mono-in" id="mon-demand" type="text" placeholder="12 - 2Q" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="mon-d-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--purple);">Marginal Revenue (MR as function of Q)</div>
+          <div class="input-box-sub">For linear demand P = a − bQ, MR = a − 2bQ. e.g. 12 − 4Q</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--purple);">MR =</span>
+            <input class="mono-in" id="mon-mr" type="text" placeholder="12 - 4Q" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="mon-mr-preview"></div>
+          <button class="use-mkt-btn" onclick="autoMR()">⚡ Auto-derive MR from Demand</button>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Marginal Cost (MC)</div>
+          <div class="input-box-sub">Can be a constant or function of Q. e.g.&nbsp; 4 &nbsp;·&nbsp; 2Q + 1</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">MC =</span>
+            <input class="mono-in" id="mon-mc" type="text" placeholder="4" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="mon-mc-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--orange);">Average Total Cost (ATC) <span style="font-weight:400;font-style:italic;">optional</span></div>
+          <div class="input-box-sub">e.g.&nbsp; 4 &nbsp;·&nbsp; Q + 4 &nbsp;·&nbsp; 10/Q + 2. Leave blank if same as MC.</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--orange);">ATC =</span>
+            <input class="mono-in" id="mon-atc" type="text" placeholder="4  (or leave blank)" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="mon-atc-preview"></div>
+        </div>
+      </div>
+
+      <div class="step-lbl">Step 2 — Solve for Q<sub>max</sub> (where MR = MC)</div>
+      <div class="solve-row">
+        <button class="btn btn-purple" onclick="solveMonopoly()">Solve Qmax &amp; P*</button>
+        <div class="solve-out" id="mon-solve-out">Enter equations above, then click Solve.</div>
+      </div>
+    </div>
+
+    <!-- Step 2: Confirm values -->
+    <div class="card">
+      <div class="card-title">Step 2 — Confirm or Override Values</div>
+      <div class="input-box-sub" style="margin-bottom:.9rem;">Values are auto-filled after solving. You can override any of them manually.</div>
+
+      <div class="four-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--purple);">Q<sub>max</sub></div>
+          <div class="input-box-sub">Where MR = MC</div>
+          <div class="price-row">
+            <label>Q<sub>max</sub> =</label>
+            <input class="num-in" id="mon-qmax" type="number" placeholder="—" step="any" style="flex:1;">
+          </div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">P* (Monopoly Price)</div>
+          <div class="input-box-sub">From Demand at Q<sub>max</sub></div>
+          <div class="price-row">
+            <label>P* =</label>
+            <input class="num-in" id="mon-pstar" type="number" placeholder="—" step="any" style="flex:1;">
+          </div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">MC at Q<sub>max</sub></div>
+          <div class="input-box-sub">= MR at Q<sub>max</sub></div>
+          <div class="price-row">
+            <label>MC =</label>
+            <input class="num-in" id="mon-mc-val" type="number" placeholder="—" step="any" style="flex:1;">
+          </div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--orange);">ATC at Q<sub>max</sub></div>
+          <div class="input-box-sub">Used to shade profit π</div>
+          <div class="price-row">
+            <label>ATC =</label>
+            <input class="num-in" id="mon-atc-val" type="number" placeholder="—" step="any" style="flex:1;">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-purple btn-full" onclick="drawMonopolyGraph()">Generate Monopoly Graph</button>
+      <div class="err-msg" id="mon-err"></div>
+    </div>
+
+    <!-- Graph output -->
+    <div class="card" id="mon-graph-card" style="display:none;">
+      <div class="card-title">Monopoly Graph</div>
+
+      <div class="four-col" style="margin-bottom:1.1rem;">
+        <div class="stat">
+          <div class="stat-lbl">Q<sub>max</sub> (MR = MC)</div>
+          <div class="stat-val" id="mstat-qmax">—</div>
+          <div class="stat-sub">Profit-max quantity</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Monopoly Price P*</div>
+          <div class="stat-val" id="mstat-pstar">—</div>
+          <div class="stat-sub">From demand at Q<sub>max</sub></div>
+        </div>
+        <div class="stat" id="mstat-profit-tile">
+          <div class="stat-lbl">Profit (π)</div>
+          <div class="stat-val" id="mstat-profit">—</div>
+          <div class="stat-sub" id="mstat-profit-formula">π = Q(P* − ATC)</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">DWL</div>
+          <div class="stat-val" id="mstat-dwl">—</div>
+          <div class="stat-sub">½ × base × height</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap" style="height:460px;"><canvas id="monChart"></canvas></div>
+
+      <!-- Analysis -->
+      <div class="analysis-card" style="margin-top:1rem;">
+        <div class="analysis-title">📊 Monopoly Analysis</div>
+        <div class="analysis-grid">
+          <div class="analysis-item">
+            <label>Profit / Loss (π)</label>
+            <div class="analysis-value" id="an-mon-profit">—</div>
+            <div class="analysis-formula" id="an-mon-profit-formula"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Deadweight Loss (DWL)</label>
+            <div class="analysis-value" id="an-mon-dwl">—</div>
+            <div class="analysis-formula" id="an-mon-dwl-formula">½ × (Q_comp − Q_max) × (P* − MC)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Competitive Equilibrium (for reference)</label>
+            <div class="analysis-value" id="an-mon-comp">—</div>
+            <div class="analysis-formula">Where D = MC (P = MC)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Long-run profits?</label>
+            <div class="analysis-value">Yes — monopoly maintains barriers to entry</div>
+            <div class="analysis-formula">No new firms can enter to compete away profit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ════════════════════════════════════
+       TAB 3 — PRICE CONTROLS
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-controls">
+
+    <div class="card">
+      <div class="card-title">Step 1 — Enter Market Equations <span class="badge">as functions of P</span></div>
+      <div class="input-box-sub" style="margin-bottom:.85rem;">Uses the same format as the Market Equilibrium tab. If you already solved it there, just re-enter or copy the equations.</div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Quantity Demanded (Qd)</div>
+          <div class="input-box-sub">e.g. −2P + 12 &nbsp;·&nbsp; −10P + 250</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">Qd =</span>
+            <input class="mono-in" id="pc-qd" type="text" placeholder="-2P + 12" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="pc-qd-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Quantity Supplied (Qs)</div>
+          <div class="input-box-sub">e.g. 2P − 2 &nbsp;·&nbsp; 10P + 50</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">Qs =</span>
+            <input class="mono-in" id="pc-qs" type="text" placeholder="2P - 2" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="pc-qs-preview"></div>
+        </div>
+      </div>
+      <div class="solve-row">
+        <button class="btn btn-blue" onclick="pcSolveEq()">Find Equilibrium P* &amp; Q*</button>
+        <div class="solve-out" id="pc-eq-out">Enter equations, then find equilibrium first.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Step 2 — Set Price Control</div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box" style="background:#fff0f0; border:1px solid #f0c0c0;">
+          <div class="input-box-title" style="color:var(--red);">🔴 Price Ceiling</div>
+          <div class="input-box-sub">A <strong>maximum</strong> price set <em>below</em> equilibrium. Creates a <strong>shortage</strong> (Qd &gt; Qs).</div>
+          <div class="price-row">
+            <label>Ceiling P =</label>
+            <input class="num-in" id="pc-ceiling" type="number" placeholder="e.g. 3" min="0" step="any" style="flex:1;">
+          </div>
+          <button class="use-mkt-btn" onclick="pcSetType('ceiling')">▶ Use Price Ceiling</button>
+        </div>
+        <div class="input-box" style="background:#f0f5ff; border:1px solid #c0d0f0;">
+          <div class="input-box-title" style="color:var(--blue);">🔵 Price Floor</div>
+          <div class="input-box-sub">A <strong>minimum</strong> price set <em>above</em> equilibrium. Creates a <strong>surplus</strong> (Qs &gt; Qd).</div>
+          <div class="price-row">
+            <label>Floor P =</label>
+            <input class="num-in" id="pc-floor" type="number" placeholder="e.g. 6" min="0" step="any" style="flex:1;">
+          </div>
+          <button class="use-mkt-btn" onclick="pcSetType('floor')">▶ Use Price Floor</button>
+        </div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="drawPriceControl()">Generate Price Control Graph</button>
+      <div class="err-msg" id="pc-err"></div>
+    </div>
+
+    <div class="card" id="pc-graph-card" style="display:none;">
+      <div class="card-title" id="pc-graph-title">Price Control Graph</div>
+
+      <div class="four-col" style="margin-bottom:1.1rem;">
+        <div class="stat">
+          <div class="stat-lbl">Free Market P*</div>
+          <div class="stat-val" id="pcstat-pstar">—</div>
+          <div class="stat-sub">Equilibrium price</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Controlled Price</div>
+          <div class="stat-val" id="pcstat-pctrl">—</div>
+          <div class="stat-sub" id="pcstat-type">Ceiling / Floor</div>
+        </div>
+        <div class="stat" id="pcstat-gap-tile">
+          <div class="stat-lbl" id="pcstat-gap-lbl">Shortage / Surplus</div>
+          <div class="stat-val" id="pcstat-gap">—</div>
+          <div class="stat-sub" id="pcstat-gap-sub">Qs − Qd at controlled price</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Deadweight Loss</div>
+          <div class="stat-val" id="pcstat-dwl">—</div>
+          <div class="stat-sub">½ × ΔQ × ΔP</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap" style="height:420px;"><canvas id="pcChart"></canvas></div>
+
+      <div class="analysis-card" style="margin-top:1rem;">
+        <div class="analysis-title" id="pc-analysis-title">📊 Price Control Analysis</div>
+        <div class="analysis-grid">
+          <div class="analysis-item">
+            <label>Quantity Demanded at Controlled Price</label>
+            <div class="analysis-value" id="an-pc-qd">—</div>
+            <div class="analysis-formula" id="an-pc-qd-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Quantity Supplied at Controlled Price</label>
+            <div class="analysis-value" id="an-pc-qs">—</div>
+            <div class="analysis-formula" id="an-pc-qs-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label id="an-pc-gap-lbl">Shortage / Surplus</label>
+            <div class="analysis-value" id="an-pc-gap">—</div>
+            <div class="analysis-formula" id="an-pc-gap-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Deadweight Loss (DWL)</label>
+            <div class="analysis-value" id="an-pc-dwl">—</div>
+            <div class="analysis-formula" id="an-pc-dwl-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Is the control binding?</label>
+            <div class="analysis-value" id="an-pc-binding">—</div>
+            <div class="analysis-formula" id="an-pc-binding-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Who benefits / who is hurt?</label>
+            <div class="analysis-value" id="an-pc-who">—</div>
+            <div class="analysis-formula" id="an-pc-who-f"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 4 — SURPLUS & WELFARE
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-surplus">
+
+    <div class="card">
+      <div class="card-title">Enter Market Equations <span class="badge">as functions of P</span></div>
+      <div class="input-box-sub" style="margin-bottom:.85rem;">Same format as Market Equilibrium tab.</div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Quantity Demanded (Qd)</div>
+          <div class="input-box-sub">e.g. −2P + 12</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">Qd =</span>
+            <input class="mono-in" id="sur-qd" type="text" placeholder="-2P + 12" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="sur-qd-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Quantity Supplied (Qs)</div>
+          <div class="input-box-sub">e.g. 2P − 2</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">Qs =</span>
+            <input class="mono-in" id="sur-qs" type="text" placeholder="2P - 2" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="sur-qs-preview"></div>
+        </div>
+      </div>
+      <div class="solve-row" style="margin-bottom:1rem;">
+        <button class="btn btn-blue" onclick="surSolve()">Solve &amp; Calculate Surplus</button>
+        <div class="solve-out" id="sur-solve-out">Enter both equations, then click Solve.</div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="drawSurplusGraph()">Generate Surplus Graph</button>
+      <div class="err-msg" id="sur-err"></div>
+    </div>
+
+    <div class="card" id="sur-graph-card" style="display:none;">
+      <div class="card-title">Consumer &amp; Producer Surplus</div>
+
+      <div class="four-col" style="margin-bottom:1.1rem;">
+        <div class="stat" style="background:#e8f0fb;">
+          <div class="stat-lbl">Consumer Surplus (CS)</div>
+          <div class="stat-val" id="surstat-cs">—</div>
+          <div class="stat-sub">½ × Q* × (P_max − P*)</div>
+        </div>
+        <div class="stat" style="background:#fdecea;">
+          <div class="stat-lbl">Producer Surplus (PS)</div>
+          <div class="stat-val" id="surstat-ps">—</div>
+          <div class="stat-sub">½ × Q* × (P* − P_min)</div>
+        </div>
+        <div class="stat" style="background:#e8f5ee;">
+          <div class="stat-lbl">Total Surplus (TS)</div>
+          <div class="stat-val" id="surstat-ts">—</div>
+          <div class="stat-sub">CS + PS</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Equilibrium P* / Q*</div>
+          <div class="stat-val" id="surstat-eq">—</div>
+          <div class="stat-sub">Market clears here</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap" style="height:420px;"><canvas id="surChart"></canvas></div>
+
+      <div class="analysis-card" style="margin-top:1rem;">
+        <div class="analysis-title">📐 Surplus Analysis</div>
+        <div class="analysis-grid">
+          <div class="analysis-item">
+            <label>Consumer Surplus (CS)</label>
+            <div class="analysis-value" id="an-sur-cs">—</div>
+            <div class="analysis-formula" id="an-sur-cs-f">½ × Q* × (Demand intercept − P*)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Producer Surplus (PS)</label>
+            <div class="analysis-value" id="an-sur-ps">—</div>
+            <div class="analysis-formula" id="an-sur-ps-f">½ × Q* × (P* − Supply intercept)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Total Surplus</label>
+            <div class="analysis-value" id="an-sur-ts">—</div>
+            <div class="analysis-formula">CS + PS — maximized at free market equilibrium</div>
+          </div>
+          <div class="analysis-item">
+            <label>Demand intercept (max WTP)</label>
+            <div class="analysis-value" id="an-sur-dint">—</div>
+            <div class="analysis-formula">Price where Qd = 0 (highest willingness to pay)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Supply intercept (min WTA)</label>
+            <div class="analysis-value" id="an-sur-sint">—</div>
+            <div class="analysis-formula">Price where Qs = 0 (lowest seller acceptable price)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Efficiency</label>
+            <div class="analysis-value">Allocatively Efficient</div>
+            <div class="analysis-formula">Free market maximizes total surplus — no DWL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+//  MARKET EQUILIBRIUM — LINEAR PARSER  (Q = aP + b)
+// ═══════════════════════════════════════════════════════
+function parseLinearP(raw) {
+  let s = raw.trim().replace(/\s+/g,'');
+  if (!s) return null;
+  if (/[^0-9Pp+\-*.]/.test(s)) return null;
+  s = s.replace(/p/g,'P');
+  if (s[0] !== '-') s = '+' + s;
+  const terms = s.match(/[+\-][^+\-]+/g);
+  if (!terms) return null;
+  let pCoeff = 0, constant = 0;
+  for (let t of terms) {
+    if (t.includes('P')) {
+      let c = t.replace(/\*?P/,'');
+      if (c==='+' || c==='') c='+1';
+      if (c==='-') c='-1';
+      const v = parseFloat(c); if (isNaN(v)) return null;
+      pCoeff += v;
+    } else {
+      const v = parseFloat(t); if (isNaN(v)) return null;
+      constant += v;
+    }
+  }
+  return { pCoeff, constant };
+}
+
+function fmtLinear({ pCoeff: a, constant: b }, label) {
+  let s = '';
+  if (a !== 0) s += (a===1?'':(a===-1?'-':a))+'P';
+  if (b !== 0) { if (s && b>0) s+=' + '+b; else if (s && b<0) s+=' − '+Math.abs(b); else s+=b; }
+  if (!s) s = '0';
+  return label+' = '+s;
+}
+
+function previewLinear(inputId, previewId, label) {
+  const raw = document.getElementById(inputId).value;
+  const el  = document.getElementById(previewId);
+  if (!raw.trim()) { el.textContent=''; el.className='parse-ok'; document.getElementById(inputId).classList.remove('error'); return null; }
+  const p = parseLinearP(raw);
+  if (!p) {
+    el.textContent='⚠ Cannot parse. Try: -2P + 12';
+    el.className='parse-err'; document.getElementById(inputId).classList.add('error'); return null;
+  }
+  el.textContent='✓ '+fmtLinear(p, label);
+  el.className='parse-ok'; document.getElementById(inputId).classList.remove('error');
+  return p;
+}
+
+document.getElementById('qd-eq').addEventListener('input',()=>previewLinear('qd-eq','qd-preview','Qd'));
+document.getElementById('qs-eq').addEventListener('input',()=>previewLinear('qs-eq','qs-preview','Qs'));
+
+// ── Solve ──────────────────────────────────────────────
+function solveEquilibrium() {
+  const qd = previewLinear('qd-eq','qd-preview','Qd');
+  const qs = previewLinear('qs-eq','qs-preview','Qs');
+  const out = document.getElementById('solve-output');
+  if (!qd||!qs) { out.textContent='Fix equation errors first.'; return; }
+  const denom = qd.pCoeff - qs.pCoeff;
+  if (Math.abs(denom)<1e-10) { out.textContent='Curves are parallel — no unique equilibrium.'; return; }
+  const pStar = (qs.constant - qd.constant) / denom;
+  const qStar = qd.pCoeff*pStar + qd.constant;
+  if (pStar<0||qStar<0) { out.innerHTML=`Solved: P*=${fmt(pStar)}, Q*=${fmt(qStar)} — negative equilibrium, check equations.`; return; }
+  document.getElementById('p-star').value = roundTo(pStar,4);
+  document.getElementById('q-star').value = roundTo(qStar,4);
+  out.innerHTML=`<strong>P* = ${fmt(pStar)}</strong>, <strong>Q* = ${fmt(qStar)}</strong> — filled in below.`;
+}
+
+// ── Draw market graph ─────────────────────────────────
+let marketChart = null;
+
+function drawMarketGraph() {
+  const errEl = document.getElementById('market-err');
+  errEl.textContent='';
+  const pStar = parseFloat(document.getElementById('p-star').value);
+  const qStar = parseFloat(document.getElementById('q-star').value);
+  if (isNaN(pStar)||isNaN(qStar)||pStar<=0||qStar<=0) { errEl.textContent='Enter valid positive P* and Q*.'; return; }
+  const qd = previewLinear('qd-eq','qd-preview','Qd');
+  const qs = previewLinear('qs-eq','qs-preview','Qs');
+  if (!qd||!qs) { errEl.textContent='Fix equation errors above.'; return; }
+
+  const pMax=Math.ceil(pStar*2.2/5)*5, qMax=Math.ceil(qStar*2.2/5)*5;
+  const sweep=(parsed)=>{
+    const pts=[]; for(let i=0;i<=300;i++){const P=(i/300)*pMax; const Q=parsed.pCoeff*P+parsed.constant; if(Q>=0)pts.push({x:Q,y:P});}
+    return pts;
+  };
+
+  document.getElementById('market-graph-card').style.display='block';
+  document.getElementById('market-graph-card').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('mstat-p').textContent='$'+fmt(pStar);
+  document.getElementById('mstat-q').textContent=fmt(qStar);
+  document.getElementById('mstat-tr').textContent='$'+fmt(pStar*qStar);
+
+  if (marketChart) { marketChart.destroy(); marketChart=null; }
+  marketChart = makeChart('marketChart', [
+    {label:'Demand (D)', data:sweep(qd), color:'#3266ad', dash:[]},
+    {label:'Supply (S)', data:sweep(qs), color:'#b94040', dash:[]},
+  ], {x:qStar,y:pStar}, 0, qMax, 0, pMax, 'Quantity (Q)', 'Price ($)');
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  MONOPOLY — EQUATION PARSERS
+//  Parses P = a - bQ  or  MC = c + dQ  (linear in Q)
+//  Returns { constant: a, qCoeff: -b } so val = constant + qCoeff*Q
+// ═══════════════════════════════════════════════════════
+
+function parseLinearQ(raw) {
+  let s = raw.trim().replace(/\s+/g, '');
+  if (!s) return null;
+  // allow digits, Q, q, +, -, *, /, ., ^(only Q^-1 for ATC)
+  if (/[^0-9Qq+\-*./^]/.test(s)) return null;
+  s = s.replace(/q/g, 'Q');
+  if (s[0] !== '-') s = '+' + s;
+  const terms = s.match(/[+\-][^+\-]+/g);
+  if (!terms) return null;
+  let qCoeff = 0, constant = 0, invQ = 0;
+  for (let t of terms) {
+    if (t.includes('Q^-1') || t.includes('Q^−1') || (t.includes('/Q') && !t.includes('Q^'))) {
+      // term like +10/Q or +10Q^-1
+      const m = t.match(/^([+\-]?\d*\.?\d*)(?:\/Q|Q\^-1)$/);
+      if (m) { let c = m[1]; if(c==='+' || c==='') c='1'; if(c==='-') c='-1'; invQ += parseFloat(c); }
+    } else if (t.includes('Q')) {
+      let c = t.replace(/\*?Q/, '');
+      if (c==='+' || c==='') c='+1'; if (c==='-') c='-1';
+      const v = parseFloat(c); if (isNaN(v)) return null;
+      qCoeff += v;
+    } else {
+      const v = parseFloat(t); if (isNaN(v)) return null;
+      constant += v;
+    }
+  }
+  return { constant, qCoeff, invQ }; // val = constant + qCoeff*Q + invQ/Q
+}
+
+function evalLinQ(parsed, q) {
+  if (!parsed) return null;
+  if (q <= 0 && parsed.invQ !== 0) return null;
+  return parsed.constant + parsed.qCoeff * q + (q > 0 ? parsed.invQ / q : 0);
+}
+
+function previewLinQ(inputId, previewId, label) {
+  const raw = document.getElementById(inputId).value;
+  const el  = document.getElementById(previewId);
+  if (!raw.trim()) { el.textContent = ''; el.className = 'parse-ok'; document.getElementById(inputId).classList.remove('error'); return null; }
+  const p = parseLinearQ(raw);
+  if (!p) {
+    el.textContent = '⚠ Cannot parse. Try: 12 - 2Q  or  4';
+    el.className = 'parse-err'; document.getElementById(inputId).classList.add('error'); return null;
+  }
+  // Format display
+  let str = '';
+  if (p.constant !== 0) str += p.constant;
+  if (p.qCoeff  !== 0) { const sign = p.qCoeff > 0 ? ' + ' : ' − '; str += (str ? sign : (p.qCoeff < 0 ? '−' : '')) + Math.abs(p.qCoeff) + 'Q'; }
+  if (p.invQ    !== 0) { const sign = p.invQ   > 0 ? ' + ' : ' − '; str += sign + Math.abs(p.invQ) + '/Q'; }
+  if (!str) str = '0';
+  el.textContent = '✓ ' + label + ' = ' + str;
+  el.className = 'parse-ok'; document.getElementById(inputId).classList.remove('error');
+  return p;
+}
+
+['mon-demand','mon-mr','mon-mc','mon-atc'].forEach(id => {
+  const previewId = id === 'mon-demand' ? 'mon-d-preview'
+                  : id === 'mon-mr'     ? 'mon-mr-preview'
+                  : id === 'mon-mc'     ? 'mon-mc-preview'
+                  :                       'mon-atc-preview';
+  const label     = id === 'mon-demand' ? 'P'   : id === 'mon-mr' ? 'MR' : id === 'mon-mc' ? 'MC' : 'ATC';
+  document.getElementById(id).addEventListener('input', () => previewLinQ(id, previewId, label));
+});
+
+// Auto-derive MR from linear demand (P = a - bQ → MR = a - 2bQ)
+function autoMR() {
+  const d = previewLinQ('mon-demand','mon-d-preview','P');
+  if (!d) { return; }
+  if (d.invQ !== 0) { document.getElementById('mon-mr-preview').textContent = '⚠ Auto-derive only works for linear demand'; return; }
+  // MR: same constant, double the Q coefficient
+  const mrConst = d.constant;
+  const mrQ     = d.qCoeff * 2;
+  let str = mrConst !== 0 ? String(mrConst) : '';
+  if (mrQ !== 0) {
+    const sign = mrQ > 0 ? ' + ' : ' - ';
+    str += (str ? sign : (mrQ < 0 ? '-' : '')) + Math.abs(mrQ) + 'Q';
+  }
+  document.getElementById('mon-mr').value = str || '0';
+  previewLinQ('mon-mr','mon-mr-preview','MR');
+}
+
+// Solve Qmax: MR = MC  →  mrConst + mrQ*Q = mcConst + mcQ*Q
+// (mrConst - mcConst) = (mcQ - mrQ)*Q
+// Q = (mrConst - mcConst) / (mcQ - mrQ)
+function solveMonopoly() {
+  const d  = previewLinQ('mon-demand',  'mon-d-preview',  'P');
+  const mr = previewLinQ('mon-mr',      'mon-mr-preview', 'MR');
+  const mc = previewLinQ('mon-mc',      'mon-mc-preview', 'MC');
+  const out = document.getElementById('mon-solve-out');
+  if (!d || !mr || !mc) { out.textContent = 'Fix equation errors first.'; return; }
+
+  // MR = MC: (mr.constant + mr.qCoeff*Q) = (mc.constant + mc.qCoeff*Q)
+  const denom = mc.qCoeff - mr.qCoeff;
+  if (Math.abs(denom) < 1e-10) {
+    if (Math.abs(mr.constant - mc.constant) < 1e-10) {
+      out.textContent = 'MR = MC for all Q — equations are identical.';
+    } else {
+      out.textContent = 'No solution: MR and MC are parallel and never intersect.';
+    }
+    return;
+  }
+  const qmax  = (mr.constant - mc.constant) / denom;
+  const pstar = evalLinQ(d,  qmax);
+  const mcVal = evalLinQ(mc, qmax);
+
+  if (qmax <= 0) { out.innerHTML = 'Solved Q<sub>max</sub> = ' + fmt(qmax) + ' — negative, check equations.'; return; }
+
+  // ATC at Qmax
+  const atcParsed = previewLinQ('mon-atc','mon-atc-preview','ATC');
+  const atcVal = atcParsed ? evalLinQ(atcParsed, qmax) : mcVal;
+
+  // Fill in fields
+  document.getElementById('mon-qmax').value    = roundTo(qmax, 4);
+  document.getElementById('mon-pstar').value   = roundTo(pstar, 4);
+  document.getElementById('mon-mc-val').value  = roundTo(mcVal, 4);
+  document.getElementById('mon-atc-val').value = roundTo(atcVal, 4);
+
+  out.innerHTML = '<strong>Q<sub>max</sub> = ' + fmt(qmax) + '</strong>, <strong>P* = $' + fmt(pstar) + '</strong>, MC = $' + fmt(mcVal) + ', ATC = $' + fmt(atcVal) + ' — filled in below.';
+}
+
+// ── Draw Monopoly Graph ───────────────────────────────
+let monChart = null;
+
+function drawMonopolyGraph() {
+  const errEl = document.getElementById('mon-err');
+  errEl.textContent = '';
+
+  const qmax   = parseFloat(document.getElementById('mon-qmax').value);
+  const pstar  = parseFloat(document.getElementById('mon-pstar').value);
+  const mcVal  = parseFloat(document.getElementById('mon-mc-val').value);
+  const atcVal = parseFloat(document.getElementById('mon-atc-val').value);
+
+  if (isNaN(qmax) || qmax <= 0)  { errEl.textContent = 'Enter Qmax (solve first or type manually).'; return; }
+  if (isNaN(pstar) || pstar <= 0){ errEl.textContent = 'Enter P*.'; return; }
+  if (isNaN(mcVal))               { errEl.textContent = 'Enter MC at Qmax.'; return; }
+
+  const dParsed  = previewLinQ('mon-demand',  'mon-d-preview',  'P');
+  const mrParsed = previewLinQ('mon-mr',      'mon-mr-preview', 'MR');
+  const mcParsed = previewLinQ('mon-mc',      'mon-mc-preview', 'MC');
+  const atcParsed= parseLinearQ(document.getElementById('mon-atc').value.trim());
+
+  if (!dParsed || !mrParsed || !mcParsed) { errEl.textContent = 'Fix equation errors above.'; return; }
+
+  // Find competitive equilibrium: P = MC  →  d.constant + d.qCoeff*Q = mc.constant + mc.qCoeff*Q
+  const compDenom = mcParsed.qCoeff - dParsed.qCoeff;
+  let qComp = null, pComp = null;
+  if (Math.abs(compDenom) > 1e-10) {
+    qComp = (dParsed.constant - mcParsed.constant) / compDenom;
+    pComp = evalLinQ(dParsed, qComp);
+    if (qComp <= 0) { qComp = null; pComp = null; }
+  }
+
+  // Axis ranges
+  const xMax = Math.ceil((qComp ? Math.max(qComp, qmax) : qmax) * 1.5 / 2) * 2;
+  const yMax = Math.ceil(Math.max(pstar, dParsed.constant) * 1.2 / 2) * 2;
+  const STEPS = 400;
+
+  // Build curve points
+  function buildCurve(parsed, xStart, xEnd) {
+    const pts = [], dq = (xEnd - xStart) / STEPS;
+    for (let i = 0; i <= STEPS; i++) {
+      const q = xStart + i * dq;
+      const y = evalLinQ(parsed, q);
+      if (y !== null && isFinite(y) && y >= -0.5 && y <= yMax * 1.15) pts.push({x: q, y: Math.max(0, y)});
+    }
+    return pts;
+  }
+
+  const demandPts = buildCurve(dParsed,  0.01, xMax);
+  const mrPts     = buildCurve(mrParsed, 0.01, xMax).filter(p => p.y >= 0);
+  const mcPts     = buildCurve(mcParsed, 0,    xMax);
+
+  // ATC: if provided and different from MC, draw it; else draw MC as flat ATC line
+  let atcPts = [];
+  const atcSrc = atcParsed || mcParsed;
+  atcPts = buildCurve(atcSrc, 0.01, xMax);
+
+  // MR line endpoint — where MR hits 0 or x-axis
+  const mrEndQ = mrParsed.qCoeff < 0 ? -mrParsed.constant / mrParsed.qCoeff : xMax;
+
+  // Profit shading: rectangle from Q=0 to Q=qmax, between P* and ATC
+  const atcAtQ = isNaN(atcVal) ? mcVal : atcVal;
+  const profit = (pstar - atcAtQ) * qmax;
+  const isProfit = profit > 0.01;
+  const isLoss   = profit < -0.01;
+  const piHi = Math.max(pstar, atcAtQ), piLo = Math.min(pstar, atcAtQ);
+  const profitShade = [{x:0,y:piHi},{x:qmax,y:piHi},{x:qmax,y:piLo},{x:0,y:piLo},{x:0,y:piHi}];
+  const profitColor = isProfit ? 'rgba(42,122,75,0.18)' : isLoss ? 'rgba(185,64,64,0.18)' : 'rgba(200,170,0,0.1)';
+
+  // DWL triangle: between qmax and qComp, between Demand and MC
+  // Vertices: (qmax, pstar), (qmax, mcVal), (qComp, pComp≈mcComp)
+  let dwlShade = [], dwlArea = null;
+  if (qComp && pComp !== null) {
+    const mcAtComp = evalLinQ(mcParsed, qComp) || pComp;
+    dwlShade = [{x:qmax,y:pstar},{x:qComp,y:pComp},{x:qmax,y:mcVal},{x:qmax,y:pstar}];
+    dwlArea  = 0.5 * Math.abs(qComp - qmax) * Math.abs(pstar - mcVal);
+  }
+
+  // Vertical dashed lines: at Qmax down, at Qcomp down
+  // Horizontal dashed lines: at P*, at ATC
+  // These will be drawn by plugin
+
+  document.getElementById('mon-graph-card').style.display = 'block';
+  document.getElementById('mon-graph-card').scrollIntoView({ behavior:'smooth', block:'start' });
+
+  // Stats
+  setText('mstat-qmax',   fmt(qmax));
+  setText('mstat-pstar',  '$' + fmt(pstar));
+  setText('mstat-profit', (profit >= 0 ? '+' : '') + '$' + fmt(profit));
+  setText('mstat-dwl',    dwlArea !== null ? '$' + fmt(dwlArea) : 'N/A (need D=MC intersection)');
+  document.getElementById('mstat-profit-tile').className = 'stat ' + (isProfit ? 'profit' : isLoss ? 'loss' : 'breakeven');
+
+  // Analysis
+  setText('an-mon-profit', (profit >= 0 ? '+' : '') + '$' + fmt(profit));
+  document.getElementById('an-mon-profit-formula').textContent =
+    'π = Q × (P* − ATC) = ' + fmt(qmax) + ' × ($' + fmt(pstar) + ' − $' + fmt(atcAtQ) + ') = $' + fmt(profit);
+  if (dwlArea !== null) {
+    setText('an-mon-dwl', '$' + fmt(dwlArea));
+    document.getElementById('an-mon-dwl-formula').textContent =
+      'DWL = ½ × (' + fmt(qComp) + ' − ' + fmt(qmax) + ') × ($' + fmt(pstar) + ' − $' + fmt(mcVal) + ') = $' + fmt(dwlArea);
+  } else {
+    setText('an-mon-dwl', 'N/A');
+  }
+  const compTxt = qComp ? 'Q = ' + fmt(qComp) + ', P = $' + fmt(pComp) : 'Cannot find (parallel curves)';
+  setText('an-mon-comp', compTxt);
+
+  if (monChart) { monChart.destroy(); monChart = null; }
+
+  const datasets = [
+    // Demand — blue solid
+    { label:'D', data:demandPts, showLine:true, fill:false,
+      borderColor:'#3266ad', backgroundColor:'transparent', pointRadius:0, borderWidth:2.5, tension:0 },
+    // MR — purple solid
+    { label:'MR', data:mrPts, showLine:true, fill:false,
+      borderColor:'#7c3aab', backgroundColor:'transparent', pointRadius:0, borderWidth:2.5, tension:0 },
+    // MC — red (solid or near-flat)
+    { label:'MC', data:mcPts, showLine:true, fill:false,
+      borderColor:'#b94040', backgroundColor:'transparent', pointRadius:0, borderWidth:2.5, tension:0 },
+    // ATC — orange (may overlap MC if same)
+    { label:'ATC', data:atcPts, showLine:true, fill:false,
+      borderColor:'#c96a12', backgroundColor:'transparent', pointRadius:0, borderWidth:2, tension:0,
+      borderDash: atcParsed ? [] : [6,3] },
+    // Qmax dot on demand curve (the monopoly price point)
+    { label:'Monopoly P*', data:[{x:qmax, y:pstar}], showLine:false,
+      pointRadius:7, pointBackgroundColor:'#3266ad', pointBorderColor:'#fff', pointBorderWidth:2 },
+    // Qmax dot on MC=MR
+    { label:'MR=MC', data:[{x:qmax, y:mcVal}], showLine:false,
+      pointRadius:7, pointBackgroundColor:'#1a1a18', pointBorderColor:'#fff', pointBorderWidth:2 },
+  ];
+
+  if (qComp && pComp !== null) {
+    datasets.push({
+      label:'Comp. Eq.', data:[{x:qComp, y:pComp}], showLine:false,
+      pointRadius:6, pointBackgroundColor:'#2a7a4b', pointBorderColor:'#fff', pointBorderWidth:2
+    });
+  }
+
+  const opts = baseOptions('Quantity (Q)', 'Price / Cost ($)', 0, xMax, 0, yMax);
+  opts.layout = { padding: { right: 50, top: 15, bottom: 20 } };
+  opts.plugins.tooltip.filter = item => !['Profit/Loss','DWL','Shading'].includes(item.dataset.label);
+  opts.plugins.tooltip.callbacks.label = c => {
+    const lbl = c.dataset.label;
+    if (lbl === 'Monopoly P*') return 'Monopoly Price: P* = $' + fmt(c.parsed.y) + ' at Q = ' + fmt(c.parsed.x);
+    if (lbl === 'MR=MC')       return 'Profit-max: MR=MC at Q=' + fmt(c.parsed.x) + ', $' + fmt(c.parsed.y);
+    if (lbl === 'Comp. Eq.')   return 'Competitive eq.: Q=' + fmt(c.parsed.x) + ', P=$' + fmt(c.parsed.y);
+    return lbl + ': $' + fmt(c.parsed.y) + ' at Q=' + fmt(c.parsed.x);
+  };
+
+  // Plugin for on-graph labels, drop-lines, and region labels
+  opts._monMeta = { qmax, pstar, mcVal, atcAtQ, qComp, pComp, isProfit, isLoss, profit, dwlArea, yMax,
+                    dParsed, mrParsed, mcPts, atcPts, demandPts, mrPts };
+
+  monChart = new Chart(document.getElementById('monChart').getContext('2d'), {
+    type: 'scatter', data: { datasets }, options: opts
+  });
+}
+
+// ── On-graph label plugin for monopoly ───────────────
+const monopolyLabelPlugin = {
+  id: 'monopolyLabels',
+  afterDraw(chart) {
+    const meta = chart.options._monMeta;
+    if (!meta) return;
+    const { qmax, pstar, mcVal, atcAtQ, qComp, pComp, isProfit, isLoss, profit, dwlArea,
+            dParsed, mrParsed, mcPts, atcPts, demandPts, mrPts } = meta;
+    const ctx = chart.ctx, xs = chart.scales.x, ys = chart.scales.y;
+    const pxX = v => xs.getPixelForValue(v);
+    const pxY = v => ys.getPixelForValue(v);
+    const ca = chart.chartArea;
+
+    // ── Clip to chart area for shading ──────────────────
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(ca.left, ca.top, ca.right - ca.left, ca.bottom - ca.top);
+    ctx.clip();
+
+    // ── Profit/loss rectangle ────────────────────────────
+    // Rectangle: x from 0→Qmax, y from ATC→P*
+    if (Math.abs(pstar - atcAtQ) > 0.1) {
+      const rx1 = pxX(0),    rx2 = pxX(qmax);
+      const ry1 = pxY(Math.max(pstar, atcAtQ));
+      const ry2 = pxY(Math.min(pstar, atcAtQ));
+      ctx.fillStyle   = isProfit ? 'rgba(42,122,75,0.18)' : 'rgba(185,64,64,0.18)';
+      ctx.strokeStyle = isProfit ? 'rgba(42,122,75,0.45)' : 'rgba(185,64,64,0.45)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4,3]);
+      ctx.fillRect(rx1, ry1, rx2 - rx1, ry2 - ry1);
+      ctx.strokeRect(rx1, ry1, rx2 - rx1, ry2 - ry1);
+      ctx.setLineDash([]);
+    }
+
+    // ── DWL triangle ────────────────────────────────────
+    // Vertices: (Qmax, P*), (Qcomp, Pcomp), (Qmax, MC)
+    if (qComp && pComp !== null && dwlArea !== null) {
+      ctx.beginPath();
+      ctx.moveTo(pxX(qmax),  pxY(pstar));
+      ctx.lineTo(pxX(qComp), pxY(pComp));
+      ctx.lineTo(pxX(qmax),  pxY(mcVal));
+      ctx.closePath();
+      ctx.fillStyle   = 'rgba(200,140,0,0.22)';
+      ctx.strokeStyle = 'rgba(170,110,0,0.55)';
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([4,3]);
+      ctx.fill();
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    ctx.restore();
+
+    // ── From here: draw outside clip so labels can overflow slightly ──
+    ctx.save();
+
+    // Helpers for drop-lines
+    function vLine(q, fromY, color) {
+      ctx.beginPath(); ctx.setLineDash([5,4]);
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      ctx.moveTo(pxX(q), pxY(fromY)); ctx.lineTo(pxX(q), ca.bottom);
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    function hLine(yVal, x0, x1, color) {
+      ctx.beginPath(); ctx.setLineDash([5,4]);
+      ctx.strokeStyle = color; ctx.lineWidth = 1.4;
+      ctx.moveTo(pxX(x0), pxY(yVal)); ctx.lineTo(pxX(x1), pxY(yVal));
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    // Vertical drop-lines
+    vLine(qmax,  pstar, 'rgba(0,0,0,0.38)');
+    if (qComp) vLine(qComp, pComp, 'rgba(42,122,75,0.45)');
+
+    // Horizontal reference lines
+    hLine(pstar,  0, qmax,               'rgba(0,0,0,0.30)');
+    hLine(mcVal,  0, qComp || qmax*1.3,  'rgba(185,64,64,0.30)');
+    if (Math.abs(atcAtQ - mcVal) > 0.2) {
+      hLine(atcAtQ, 0, qmax,             'rgba(201,106,18,0.30)');
+    }
+
+    // ── On-curve labels — placed at 82% along each curve ──
+    // Offset each label AWAY from the line so they don't overlap:
+    //   D  (slopes down) → label above the line
+    //   MR (slopes down, steeper) → label below D, above MR
+    //   MC (flat or upward) → label above the line
+    //   ATC (flat or upward) → label below MC
+    function labelAtFrac(pts, text, color, baseline, fracAlong) {
+      if (!pts || pts.length < 2) return;
+      const frac = fracAlong ?? 0.82;
+      const pt = pts[Math.min(Math.floor(pts.length * frac), pts.length - 1)];
+      if (!pt) return;
+      const px_ = pxX(pt.x), py_ = pxY(pt.y);
+      if (px_ > ca.right + 2 || py_ < ca.top - 2 || py_ > ca.bottom + 2) return;
+      ctx.font = 'bold 12px -apple-system, sans-serif';
+      ctx.fillStyle = color;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = baseline; // 'bottom' = above line, 'top' = below line
+      // Place label just past the right end of the curve
+      const lx = Math.min(px_ + 5, ca.right + 45);
+      const ly = py_ + (baseline === 'bottom' ? -3 : 3);
+      ctx.fillText(text, lx, ly);
+    }
+
+    // D: above the demand line
+    labelAtFrac(demandPts, 'D',   '#3266ad', 'bottom', 0.84);
+    // MR: below MR line (it's steeper than D, so below keeps it clear of D label)
+    labelAtFrac(mrPts,     'MR',  '#7c3aab', 'top',    0.78);
+    // MC: above MC line
+    labelAtFrac(mcPts,     'MC',  '#b94040', 'bottom', 0.84);
+    // ATC: below ATC line (if different from MC)
+    if (atcPts && atcPts.length > 0 && Math.abs(atcAtQ - mcVal) > 0.1) {
+      labelAtFrac(atcPts, 'ATC', '#c96a12', 'top', 0.84);
+    } else {
+      labelAtFrac(mcPts, 'MC = ATC', '#b94040', 'bottom', 0.84);
+    }
+
+    // ── Axis tick labels ──────────────────────────────────
+    ctx.font = 'bold 11px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#1a1a18';
+    ctx.fillText('Qmax', pxX(qmax), ca.bottom + 5);
+    if (qComp) {
+      ctx.fillStyle = '#2a7a4b';
+      ctx.fillText('Qcomp', pxX(qComp), ca.bottom + 5);
+    }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#3266ad';
+    ctx.fillText('P*', ca.left - 4, pxY(pstar));
+    ctx.fillStyle = '#b94040';
+    ctx.fillText('MC', ca.left - 4, pxY(mcVal));
+
+    // ── π label inside profit rectangle ──────────────────
+    if (Math.abs(pstar - atcAtQ) > 0.3) {
+      // Centroid of rectangle
+      const cq = qmax / 2;
+      const cp = (pstar + atcAtQ) / 2;
+      ctx.font = 'bold 14px Georgia, serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = isProfit ? 'rgba(30,110,55,0.85)' : 'rgba(160,40,40,0.85)';
+      ctx.fillText(isProfit ? '+π' : '−π', pxX(cq), pxY(cp));
+    }
+
+    // ── DWL label inside triangle ─────────────────────────
+    // Centroid: ((Qmax+Qcomp+Qmax)/3, (P*+Pcomp+MC)/3)
+    if (qComp && dwlArea !== null) {
+      const cq = (qmax + qComp + qmax) / 3;
+      const cp = (pstar + pComp + mcVal) / 3;
+      ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(140,85,0,0.88)';
+      ctx.fillText('DWL', pxX(cq), pxY(cp));
+    }
+
+    ctx.restore();
+  }
+};
+
+Chart.register(monopolyLabelPlugin);
+
+// ═══════════════════════════════════════════════════════
+//  CHART FACTORIES
+// ═══════════════════════════════════════════════════════
+function makeChart(canvasId, lines, eqPt, xMin, xMax, yMin, yMax, xLabel, yLabel) {
+  const datasets = lines.map(l=>({
+    label:l.label, data:l.data, showLine:true,
+    borderColor:l.color, backgroundColor: l.fill ? (l.bg||'transparent') : 'transparent',
+    fill: l.fill||false,
+    pointRadius:0, borderWidth:l.width||2.5,
+    borderDash:l.dash||[], tension:0
+  }));
+  if(eqPt) datasets.push({
+    label:'Equilibrium', data:[eqPt], showLine:false,
+    pointRadius:8, pointBackgroundColor:'#1a1a18',
+    pointBorderColor:'#fff', pointBorderWidth:2.5
+  });
+  return new Chart(document.getElementById(canvasId).getContext('2d'),{
+    type:'scatter', data:{datasets},
+    options: baseOptions(xLabel,yLabel,xMin,xMax,yMin,yMax)
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  FIRM CHART — with on-curve labels, Q_max dropline, π label
+// ═══════════════════════════════════════════════════════
+
+// Custom Chart.js plugin: draws labels directly on curves
+const firmLabelPlugin = {
+  id: 'firmLabels',
+  afterDraw(chart) {
+    const meta = chart.options._firmMeta;
+    if (!meta) return;
+    const ctx = chart.ctx;
+    const xScale = chart.scales.x;
+    const yScale = chart.scales.y;
+
+    // Helper: convert data coords → pixel coords
+    const px = (x, y) => ({ x: xScale.getPixelForValue(x), y: yScale.getPixelForValue(y) });
+
+    // Helper: find point on a dataset at a given x fraction (0–1)
+    function ptAtFrac(pts, frac) {
+      if (!pts || pts.length === 0) return null;
+      const idx = Math.min(Math.floor(pts.length * frac), pts.length - 1);
+      return pts[idx];
+    }
+
+    ctx.save();
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textBaseline = 'middle';
+
+    // ── On-curve labels ──────────────────────────────
+    // Each label: find a point ~80% along the curve, draw label to its right
+    const labels = [
+      { pts: meta.mcPts,  text: 'MC',    color: '#b94040', frac: 0.82, offsetX: 6, offsetY: -4 },
+      { pts: meta.atcPts, text: 'ATC',   color: '#c96a12', frac: 0.87, offsetX: 6, offsetY:  0 },
+      { pts: meta.avcPts, text: 'AVC',   color: '#1a7a7a', frac: 0.90, offsetX: 6, offsetY:  0 },
+    ];
+
+    for (const lbl of labels) {
+      const pt = ptAtFrac(lbl.pts, lbl.frac);
+      if (!pt || pt.y > chart.scales.y.max * 1.05) continue;
+      const pix = px(pt.x, pt.y);
+      if (pix.x > chart.chartArea.right - 5) continue; // don't draw outside chart
+      ctx.fillStyle = lbl.color;
+      ctx.fillText(lbl.text, pix.x + lbl.offsetX, pix.y + lbl.offsetY);
+    }
+
+    // ── P = MR label — right end of the MR line ──────
+    if (meta.mrPts && meta.mrPts.length > 0) {
+      const mrY = meta.mrPts[0].y;
+      const labelX = chart.chartArea.right - 4;
+      const labelY = yScale.getPixelForValue(mrY);
+      ctx.fillStyle = '#3266ad';
+      ctx.textAlign = 'right';
+      ctx.fillText('P = MR', labelX, labelY - 9);
+      ctx.textAlign = 'left';
+    }
+
+    // ── Q_max vertical dashed drop-line ──────────────
+    if (meta.eqPt) {
+      const eqPixX = xScale.getPixelForValue(meta.eqPt.x);
+      const eqPixY = yScale.getPixelForValue(meta.eqPt.y);
+      const baseY  = chart.chartArea.bottom;
+
+      ctx.beginPath();
+      ctx.setLineDash([5, 4]);
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(eqPixX, eqPixY);
+      ctx.lineTo(eqPixX, baseY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Q_max label below x-axis
+      ctx.fillStyle = '#1a1a18';
+      ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Qmax', eqPixX, baseY + 14);
+      ctx.textAlign = 'left';
+    }
+
+    // ── ATC dot at Q_max ─────────────────────────────
+    if (meta.eqPt && meta.atcPts && meta.atcPts.length > 0) {
+      const qmx = meta.eqPt.x;
+      // find closest ATC point to qmx
+      const atcPt = meta.atcPts.reduce((best, p) =>
+        Math.abs(p.x - qmx) < Math.abs(best.x - qmx) ? p : best, meta.atcPts[0]);
+      const apix = px(atcPt.x, atcPt.y);
+      ctx.beginPath();
+      ctx.arc(apix.x, apix.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#b94040';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // ── π label inside shading rectangle ─────────────
+    if (meta.shadePts && meta.shadePts.length >= 4 && meta.eqPt) {
+      const hi = meta.shadePts[0].y;  // top of shading
+      const lo = meta.shadePts[2].y;  // bottom of shading
+      const qr = meta.eqPt.x;         // right edge = Q_max
+      // Center the π label in the rectangle
+      const cx = qr * 0.45;
+      const cy = (hi + lo) / 2;
+      const cpix = px(cx, cy);
+      if (cpix.x > chart.chartArea.left && cpix.y > chart.chartArea.top) {
+        ctx.font = 'bold 15px Georgia, serif';
+        ctx.fillStyle = meta.isProfit ? 'rgba(42,122,75,0.75)' : 'rgba(185,64,64,0.75)';
+        ctx.textAlign = 'center';
+        ctx.fillText(meta.isProfit ? '+π' : '−π', cpix.x, cpix.y);
+        ctx.textAlign = 'left';
+      }
+    }
+
+    ctx.restore();
+  }
+};
+
+Chart.register(firmLabelPlugin);
+
+function makeFirmChart(canvasId, shadeColor, mcPts, atcPts, avcPts, mrPts, shadePts, eqPt, isProfit, xMin, xMax, yMin, yMax) {
+  const datasets = [
+    // Shading first (behind everything)
+    { label:'Shading', data:shadePts, showLine:true, fill:true,
+      borderColor:'transparent', backgroundColor:shadeColor,
+      pointRadius:0, borderWidth:0, tension:0 },
+    // Cost curves
+    { label:'MC',  data:mcPts,  showLine:true, fill:false,
+      borderColor:'#b94040', backgroundColor:'transparent',
+      pointRadius:0, borderWidth:2.5, tension:0, borderDash:[] },
+    { label:'ATC', data:atcPts, showLine:true, fill:false,
+      borderColor:'#c96a12', backgroundColor:'transparent',
+      pointRadius:0, borderWidth:2.5, tension:0, borderDash:[] },
+    { label:'AVC', data:avcPts, showLine:true, fill:false,
+      borderColor:'#1a7a7a', backgroundColor:'transparent',
+      pointRadius:0, borderWidth:2, tension:0, borderDash:[6,3] },
+    // MR = P horizontal line
+    { label:'P = MR', data:mrPts, showLine:true, fill:false,
+      borderColor:'#3266ad', backgroundColor:'transparent',
+      pointRadius:0, borderWidth:2.5, tension:0, borderDash:[9,4] },
+  ];
+
+  // Equilibrium dot at MR = MC intersection
+  if (eqPt) datasets.push({
+    label:'Q_max (MR=MC)', data:[eqPt], showLine:false,
+    pointRadius:8, pointBackgroundColor:'#1a1a18',
+    pointBorderColor:'#ffffff', pointBorderWidth:2.5
+  });
+
+  const opts = baseOptions('Quantity (q)', '$ Cost / Revenue', xMin, xMax, yMin, yMax);
+  opts.layout = { padding: { right: 40, top: 10, bottom: 20 } };
+  opts.plugins.tooltip.filter = item => item.dataset.label !== 'Shading';
+  opts.plugins.tooltip.callbacks.label = c => {
+    if (c.dataset.label === 'Q_max (MR=MC)') return 'Qmax = ' + fmt(c.parsed.x) + ',  P = $' + fmt(c.parsed.y);
+    return c.dataset.label + ': $' + fmt(c.parsed.y) + ' at q = ' + fmt(c.parsed.x);
+  };
+  // Pass data for the plugin to use
+  opts._firmMeta = { mcPts, atcPts, avcPts, mrPts, shadePts, eqPt, isProfit };
+
+  return new Chart(document.getElementById(canvasId).getContext('2d'), {
+    type: 'scatter',
+    data: { datasets },
+    options: opts
+  });
+}
+
+function baseOptions(xLabel, yLabel, xMin, xMax, yMin, yMax) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 280 },
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: c => `${c.dataset.label}: $${fmt(c.parsed.y)} at ${fmt(c.parsed.x)}` } }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: xLabel, font: { size: 11 }, color: '#6b6a64' },
+        min: xMin, max: xMax,
+        grid: { color: 'rgba(0,0,0,0.06)' },
+        ticks: { color: '#6b6a64' }
+      },
+      y: {
+        title: { display: true, text: yLabel, font: { size: 11 }, color: '#6b6a64' },
+        min: yMin, max: yMax,
+        grid: { color: 'rgba(0,0,0,0.06)' },
+        ticks: { color: '#6b6a64', callback: v => '$' + v }
+      }
+    }
+  };
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  TAB 3 — PRICE CONTROLS
+// ═══════════════════════════════════════════════════════
+
+let _pcType = null; // 'ceiling' or 'floor'
+
+['pc-qd','pc-qs'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () =>
+    previewLinear(id, id + '-preview', id === 'pc-qd' ? 'Qd' : 'Qs'));
+});
+
+function pcSolveEq() {
+  const qd  = previewLinear('pc-qd','pc-qd-preview','Qd');
+  const qs  = previewLinear('pc-qs','pc-qs-preview','Qs');
+  const out = document.getElementById('pc-eq-out');
+  if (!qd || !qs) { out.textContent = 'Fix equation errors first.'; return; }
+  const denom = qd.pCoeff - qs.pCoeff;
+  if (Math.abs(denom) < 1e-10) { out.textContent = 'Curves are parallel — no equilibrium.'; return; }
+  const pStar = (qs.constant - qd.constant) / denom;
+  const qStar = qd.pCoeff * pStar + qd.constant;
+  if (pStar < 0 || qStar < 0) { out.innerHTML = `Negative equilibrium (P*=${fmt(pStar)}, Q*=${fmt(qStar)}) — check equations.`; return; }
+  out.innerHTML = `<strong>P* = $${fmt(pStar)}</strong>, <strong>Q* = ${fmt(qStar)}</strong> — now set a price control below.`;
+}
+
+function pcSetType(type) {
+  _pcType = type;
+  const ceiling = document.getElementById('pc-ceiling');
+  const floor   = document.getElementById('pc-floor');
+  if (type === 'ceiling') { ceiling.style.fontWeight = '700'; floor.style.fontWeight = ''; }
+  else                    { floor.style.fontWeight   = '700'; ceiling.style.fontWeight = ''; }
+  document.getElementById('pc-eq-out').innerHTML += (document.getElementById('pc-eq-out').innerHTML.includes('→') ? '' : '') ;
+}
+
+let pcChart = null;
+
+function drawPriceControl() {
+  const errEl = document.getElementById('pc-err');
+  errEl.textContent = '';
+
+  const qd = previewLinear('pc-qd','pc-qd-preview','Qd');
+  const qs = previewLinear('pc-qs','pc-qs-preview','Qs');
+  if (!qd || !qs) { errEl.textContent = 'Enter valid Qd and Qs equations.'; return; }
+
+  // Determine which control is active
+  const ceilVal = parseFloat(document.getElementById('pc-ceiling').value);
+  const floorVal = parseFloat(document.getElementById('pc-floor').value);
+
+  // Popup if both are filled and no type explicitly selected
+  if (!isNaN(ceilVal) && !isNaN(floorVal) && _pcType === null) {
+    showModal('⚠️ Cannot use both at once', 'A market can only have a Price Ceiling OR a Price Floor — not both at the same time. Click "▶ Use Price Ceiling" or "▶ Use Price Floor" to choose which one to apply.');
+    return;
+  }
+  if (!isNaN(ceilVal) && !isNaN(floorVal)) {
+    showModal('⚠️ Cannot use both at once', 'You have entered both a Price Ceiling and a Price Floor. A market can only have one price control at a time. The graph will use the ' + (_pcType === 'ceiling' ? 'ceiling' : 'floor') + ' you last selected. Clear the other field to avoid confusion.');
+    // don't return — allow the selected one to proceed
+  }
+
+  let controlled, type;
+  if (!isNaN(ceilVal) && (isNaN(floorVal) || _pcType === 'ceiling')) {
+    controlled = ceilVal; type = 'ceiling';
+  } else if (!isNaN(floorVal)) {
+    controlled = floorVal; type = 'floor';
+  } else {
+    errEl.textContent = 'Enter a ceiling or floor price, then click the ▶ Use button for the one you want.'; return;
+  }
+
+  // Find free market equilibrium
+  const denom = qd.pCoeff - qs.pCoeff;
+  if (Math.abs(denom) < 1e-10) { errEl.textContent = 'Curves are parallel — no equilibrium.'; return; }
+  const pStar = (qs.constant - qd.constant) / denom;
+  const qStar = qd.pCoeff * pStar + qd.constant;
+
+  // Quantities at controlled price
+  const qdCtrl = qd.pCoeff * controlled + qd.constant;
+  const qsCtrl = qs.pCoeff * controlled + qs.constant;
+  const qTraded = Math.min(qdCtrl, qsCtrl); // actual quantity exchanged
+
+  const isBinding = type === 'ceiling' ? controlled < pStar : controlled > pStar;
+  const gap       = Math.abs(qdCtrl - qsCtrl);
+
+  // DWL triangle: between Q_traded and Q* on the supply/demand gap
+  // Height = |P* - controlled| (price difference)
+  // Base   = |Q* - Q_traded|
+  const dwl = isBinding ? 0.5 * Math.abs(qStar - qTraded) * Math.abs(pStar - controlled) : 0;
+
+  // Build chart data — sweep P from 0 to pMax
+  const pMax  = Math.ceil(pStar * 2.2 / 5) * 5;
+  const qMax  = Math.ceil(Math.max(qdCtrl, qsCtrl, qStar) * 1.5 / 5) * 5;
+  const sweep = (parsed) => {
+    const pts = [];
+    for (let i = 0; i <= 300; i++) {
+      const P = (i / 300) * pMax;
+      const Q = parsed.pCoeff * P + parsed.constant;
+      if (Q >= 0) pts.push({x: Q, y: P});
+    }
+    return pts;
+  };
+
+  // DWL triangle vertices (in Q,P space)
+  let dwlPts = [];
+  if (isBinding && qTraded > 0) {
+    if (type === 'ceiling') {
+      // Triangle: (qTraded, controlled), (qStar, pStar), (qTraded, pStar) — upper right of equilibrium
+      dwlPts = [{x: qTraded, y: controlled}, {x: qStar, y: pStar}, {x: qTraded, y: pStar}, {x: qTraded, y: controlled}];
+    } else {
+      // Floor: triangle below equilibrium
+      dwlPts = [{x: qTraded, y: controlled}, {x: qStar, y: pStar}, {x: qTraded, y: pStar}, {x: qTraded, y: controlled}];
+    }
+  }
+
+  // Shortage/surplus shading (horizontal bar between Qd and Qs at controlled price)
+  const gapShade = isBinding ? [
+    {x: Math.min(qdCtrl, qsCtrl), y: controlled},
+    {x: Math.max(qdCtrl, qsCtrl), y: controlled}
+  ] : [];
+
+  // Update stats
+  document.getElementById('pc-graph-card').style.display = 'block';
+  document.getElementById('pc-graph-card').scrollIntoView({behavior:'smooth', block:'start'});
+  document.getElementById('pc-graph-title').textContent =
+    type === 'ceiling' ? 'Price Ceiling Graph' : 'Price Floor Graph';
+  document.getElementById('pc-analysis-title').textContent =
+    type === 'ceiling' ? '📊 Price Ceiling Analysis' : '📊 Price Floor Analysis';
+
+  setText('pcstat-pstar',  '$' + fmt(pStar));
+  setText('pcstat-pctrl',  '$' + fmt(controlled));
+  setText('pcstat-type',   type === 'ceiling' ? 'Maximum price (ceiling)' : 'Minimum price (floor)');
+  setText('pcstat-gap',    isBinding ? fmt(gap) + ' units' : 'Not binding');
+  setText('pcstat-dwl',    isBinding ? '$' + fmt(dwl) : '$0 (not binding)');
+  document.getElementById('pcstat-gap-lbl').textContent = type === 'ceiling' ? 'Shortage (Qd − Qs)' : 'Surplus (Qs − Qd)';
+  document.getElementById('pcstat-gap-tile').className  = 'stat ' + (isBinding ? (type === 'ceiling' ? 'loss' : 'breakeven') : '');
+
+  // Analysis items
+  setText('an-pc-qd',      fmt(qdCtrl) + ' units');
+  document.getElementById('an-pc-qd-f').textContent = `Qd at P=$${fmt(controlled)}`;
+  setText('an-pc-qs',      fmt(qsCtrl) + ' units');
+  document.getElementById('an-pc-qs-f').textContent = `Qs at P=$${fmt(controlled)}`;
+  const gapLbl = type === 'ceiling' ? 'Shortage' : 'Surplus';
+  document.getElementById('an-pc-gap-lbl').textContent = gapLbl;
+  setText('an-pc-gap',     isBinding ? fmt(gap) + ' units' : 'None (not binding)');
+  document.getElementById('an-pc-gap-f').textContent = `|Qd − Qs| = |${fmt(qdCtrl)} − ${fmt(qsCtrl)}|`;
+  setText('an-pc-dwl',     isBinding ? '$' + fmt(dwl) : '$0');
+  document.getElementById('an-pc-dwl-f').textContent = `½ × ${fmt(Math.abs(qStar - qTraded))} × $${fmt(Math.abs(pStar - controlled))}`;
+  setText('an-pc-binding', isBinding
+    ? `Yes — ${type === 'ceiling' ? 'ceiling below' : 'floor above'} P* = $${fmt(pStar)}`
+    : `No — ${type === 'ceiling' ? 'ceiling above' : 'floor below'} P* = $${fmt(pStar)}, market unaffected`);
+  document.getElementById('an-pc-binding-f').textContent = isBinding
+    ? `Creates a ${gapLbl.toLowerCase()} of ${fmt(gap)} units and DWL of $${fmt(dwl)}`
+    : 'A non-binding control has no effect on price or quantity.';
+  setText('an-pc-who', type === 'ceiling'
+    ? isBinding ? 'Buyers who can find the good benefit; sellers & unlucky buyers are hurt'
+                : 'No one — ceiling is above market price, no effect'
+    : isBinding ? 'Sellers who can find buyers benefit; buyers & unlucky sellers are hurt'
+                : 'No one — floor is below market price, no effect');
+  document.getElementById('an-pc-who-f').textContent = type === 'ceiling'
+    ? 'Price ceilings typically help some consumers at the cost of efficiency'
+    : 'Price floors typically help some producers at the cost of efficiency';
+
+  if (pcChart) { pcChart.destroy(); pcChart = null; }
+
+  const datasets = [
+    // DWL triangle
+    { label:'DWL', data: dwlPts, showLine: true, fill: true,
+      borderColor:'rgba(180,100,0,0.7)', backgroundColor:'rgba(200,140,0,0.2)',
+      pointRadius:0, borderWidth:1.5, tension:0, borderDash:[4,3] },
+    // Demand
+    { label:'Demand (D)', data: sweep(qd), showLine:true, fill:false,
+      borderColor:'#3266ad', backgroundColor:'transparent', pointRadius:0, borderWidth:2.5, tension:0 },
+    // Supply
+    { label:'Supply (S)', data: sweep(qs), showLine:true, fill:false,
+      borderColor:'#b94040', backgroundColor:'transparent', pointRadius:0, borderWidth:2.5, tension:0 },
+    // Controlled price horizontal line
+    { label: type === 'ceiling' ? 'Price Ceiling' : 'Price Floor',
+      data: [{x:0, y:controlled}, {x:qMax, y:controlled}],
+      showLine:true, fill:false,
+      borderColor: type === 'ceiling' ? '#b94040' : '#3266ad',
+      backgroundColor:'transparent', pointRadius:0, borderWidth:3, tension:0,
+      borderDash:[] },
+    // Equilibrium dot
+    { label:'Equilibrium', data:[{x:qStar, y:pStar}], showLine:false,
+      pointRadius:7, pointBackgroundColor:'#1a1a18', pointBorderColor:'#fff', pointBorderWidth:2.5 },
+    // Dots at controlled price
+    { label:'Qs at control', data:[{x:qsCtrl, y:controlled}], showLine:false,
+      pointRadius:6, pointBackgroundColor:'#b94040', pointBorderColor:'#fff', pointBorderWidth:2 },
+    { label:'Qd at control', data:[{x:qdCtrl, y:controlled}], showLine:false,
+      pointRadius:6, pointBackgroundColor:'#3266ad', pointBorderColor:'#fff', pointBorderWidth:2 },
+  ];
+
+  const opts = baseOptions('Quantity (Q)', 'Price ($)', 0, qMax, 0, pMax);
+  opts.layout = { padding: { right: 55, top: 15, bottom: 20 } };
+  opts.plugins.tooltip.filter = item => item.dataset.label !== 'DWL';
+  opts._pcMeta = { pStar, qStar, controlled, type, qdCtrl, qsCtrl, qTraded, isBinding, gap, dwl, sweep, qd, qs };
+
+  pcChart = new Chart(document.getElementById('pcChart').getContext('2d'), {
+    type: 'scatter', data: { datasets }, options: opts
+  });
+}
+
+// ── Price Control label plugin ────────────────────────
+const pcLabelPlugin = {
+  id: 'pcLabels',
+  afterDraw(chart) {
+    const m = chart.options._pcMeta;
+    if (!m) return;
+    const { pStar, qStar, controlled, type, qdCtrl, qsCtrl, isBinding, gap, dwl, qd, qs } = m;
+    const ctx = chart.ctx, xs = chart.scales.x, ys = chart.scales.y;
+    const ca = chart.chartArea;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(ca.left, ca.top, ca.right-ca.left, ca.bottom-ca.top); ctx.clip();
+    const pxX = v => xs.getPixelForValue(v);
+    const pxY = v => ys.getPixelForValue(v);
+
+    // ── DWL shading triangle (drawn first, under labels) ──
+    if (isBinding) {
+      const qT = Math.min(qdCtrl, qsCtrl); // quantity actually traded
+      ctx.beginPath();
+      ctx.moveTo(pxX(qT),    pxY(controlled));
+      ctx.lineTo(pxX(qStar), pxY(pStar));
+      ctx.lineTo(pxX(qT),    pxY(pStar));
+      ctx.closePath();
+      ctx.fillStyle   = 'rgba(200,140,0,0.22)';
+      ctx.strokeStyle = 'rgba(180,110,0,0.55)';
+      ctx.lineWidth   = 1.5;
+      ctx.setLineDash([4,3]);
+      ctx.fill();
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    ctx.restore(); // restore clip before drawing outside-chart labels
+    ctx.save();
+
+    // ── Drop-line from equilibrium ──
+    ctx.beginPath(); ctx.setLineDash([5,4]);
+    ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 1.4;
+    ctx.moveTo(pxX(qStar), pxY(pStar)); ctx.lineTo(pxX(qStar), ca.bottom); ctx.stroke();
+    ctx.moveTo(pxX(qStar), pxY(pStar)); ctx.lineTo(ca.left,     pxY(pStar)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ── Drop-lines at controlled price intersections ──
+    if (isBinding) {
+      [qsCtrl, qdCtrl].forEach((q, i) => {
+        ctx.beginPath(); ctx.setLineDash([4,4]);
+        ctx.strokeStyle = i===0 ? 'rgba(185,64,64,0.35)' : 'rgba(50,102,173,0.35)';
+        ctx.lineWidth = 1.2;
+        ctx.moveTo(pxX(q), pxY(controlled)); ctx.lineTo(pxX(q), ca.bottom); ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      // Shortage/surplus double-headed arrow
+      const x1 = pxX(Math.min(qdCtrl, qsCtrl)), x2 = pxX(Math.max(qdCtrl, qsCtrl));
+      const arrowY = pxY(controlled) + (type === 'ceiling' ? -22 : 22);
+      const arrowColor = type === 'ceiling' ? '#b94040' : '#3266ad';
+      ctx.strokeStyle = arrowColor; ctx.fillStyle = arrowColor; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x1+6, arrowY); ctx.lineTo(x2-6, arrowY); ctx.stroke();
+      const ah = 5;
+      [[x1,1],[x2,-1]].forEach(([x,dir]) => {
+        ctx.beginPath();
+        ctx.moveTo(x + dir*6, arrowY);
+        ctx.lineTo(x + dir*6 + dir*ah, arrowY-ah);
+        ctx.lineTo(x + dir*6 + dir*ah, arrowY+ah);
+        ctx.closePath(); ctx.fill();
+      });
+      ctx.font = 'bold 10.5px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = arrowColor;
+      ctx.fillText(
+        type === 'ceiling' ? `Shortage = ${fmt(gap)}` : `Surplus = ${fmt(gap)}`,
+        (x1+x2)/2, arrowY + (type === 'ceiling' ? -13 : 13)
+      );
+    }
+
+    // ── Curve labels — placed at END of curve, offset ABOVE the line ──
+    // Use the point where curves exit the right side of the chart
+    // and offset vertically so they don't sit on the line
+    ctx.font = 'bold 12.5px -apple-system, sans-serif';
+    const rightQ = xs.max * 0.88; // slightly before right edge so label is visible
+
+    function curveP(parsed, q) {
+      // Qd = a*P + b  →  P = (Q - b) / a
+      if (Math.abs(parsed.pCoeff) < 1e-10) return null;
+      return (q - parsed.constant) / parsed.pCoeff;
+    }
+
+    const dP = curveP(qd, rightQ);  // price on demand curve at rightQ
+    const sP = curveP(qs, rightQ);  // price on supply curve at rightQ
+
+    // D label: above the demand line (demand slopes down → label above it)
+    if (dP !== null && dP >= ys.min && dP <= ys.max * 1.05) {
+      ctx.fillStyle = '#3266ad';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText('D', pxX(rightQ) + 4, pxY(dP) - 3);
+    }
+    // S label: below the supply line (supply slopes up → label below it)
+    if (sP !== null && sP >= ys.min && sP <= ys.max * 1.05) {
+      ctx.fillStyle = '#b94040';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('S', pxX(rightQ) + 4, pxY(sP) + 3);
+    }
+
+    // Control price label — right of chart, vertically centered on line
+    ctx.font = 'bold 11px -apple-system, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = type === 'ceiling' ? '#b94040' : '#3266ad';
+    ctx.fillText(
+      type === 'ceiling' ? `Price Ceiling = $${fmt(controlled)}` : `Price Floor = $${fmt(controlled)}`,
+      ca.right + 6, pxY(controlled)
+    );
+
+    // P*, Q* axis labels
+    ctx.font = 'bold 10.5px -apple-system, sans-serif';
+    ctx.fillStyle = '#444';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText('P*', ca.left - 4, pxY(pStar));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('Q*', pxX(qStar), ca.bottom + 5);
+
+    // DWL label inside triangle
+    if (isBinding) {
+      const qT = Math.min(qdCtrl, qsCtrl);
+      const dlQ = (qT + qStar) / 2;
+      const dlP = (controlled + pStar) / 2;
+      if (dlQ > 0 && dlP > 0) {
+        ctx.font = 'bold 11px -apple-system, sans-serif';
+        ctx.fillStyle = 'rgba(140,85,0,0.9)';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('DWL', pxX(dlQ), pxY(dlP));
+      }
+    }
+
+    ctx.restore();
+  }
+};
+Chart.register(pcLabelPlugin);
+
+
+// ═══════════════════════════════════════════════════════
+//  TAB 4 — CONSUMER & PRODUCER SURPLUS
+// ═══════════════════════════════════════════════════════
+
+['sur-qd','sur-qs'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () =>
+    previewLinear(id, id + '-preview', id === 'sur-qd' ? 'Qd' : 'Qs'));
+});
+
+let surChart = null;
+
+function surSolve() {
+  const qd  = previewLinear('sur-qd','sur-qd-preview','Qd');
+  const qs  = previewLinear('sur-qs','sur-qs-preview','Qs');
+  const out = document.getElementById('sur-solve-out');
+  if (!qd || !qs) { out.textContent = 'Fix equation errors first.'; return; }
+  const denom = qd.pCoeff - qs.pCoeff;
+  if (Math.abs(denom) < 1e-10) { out.textContent = 'No unique equilibrium — parallel curves.'; return; }
+  const pStar = (qs.constant - qd.constant) / denom;
+  const qStar = qd.pCoeff * pStar + qd.constant;
+  if (pStar < 0 || qStar < 0) { out.textContent = `Equilibrium is negative — check equations.`; return; }
+
+  // Intercepts
+  // Demand: Qd = a*P + b  →  P-intercept (Q=0): P = -b/a (demand intercept = max WTP)
+  const dPint = qd.pCoeff !== 0 ? -qd.constant / qd.pCoeff : null;
+  // Supply: Qs = c*P + d  →  P-intercept (Q=0): P = -d/c (supply intercept = min WTA)
+  const sPint = qs.pCoeff !== 0 ? -qs.constant / qs.pCoeff : null;
+
+  const cs = dPint !== null ? 0.5 * qStar * (dPint - pStar) : null;
+  const ps = sPint !== null ? 0.5 * qStar * (pStar - sPint) : null;
+  const ts = (cs !== null && ps !== null) ? cs + ps : null;
+
+  out.innerHTML = `<strong>P* = $${fmt(pStar)}</strong>, <strong>Q* = ${fmt(qStar)}</strong> — CS = $${cs !== null ? fmt(cs) : '?'}, PS = $${ps !== null ? fmt(ps) : '?'}, TS = $${ts !== null ? fmt(ts) : '?'}`;
+}
+
+function drawSurplusGraph() {
+  const errEl = document.getElementById('sur-err');
+  errEl.textContent = '';
+
+  const qd = previewLinear('sur-qd','sur-qd-preview','Qd');
+  const qs = previewLinear('sur-qs','sur-qs-preview','Qs');
+  if (!qd || !qs) { errEl.textContent = 'Enter valid Qd and Qs equations.'; return; }
+
+  const denom = qd.pCoeff - qs.pCoeff;
+  if (Math.abs(denom) < 1e-10) { errEl.textContent = 'No equilibrium — parallel curves.'; return; }
+  const pStar = (qs.constant - qd.constant) / denom;
+  const qStar = qd.pCoeff * pStar + qd.constant;
+  if (pStar <= 0 || qStar <= 0) { errEl.textContent = 'Equilibrium is negative — check equations.'; return; }
+
+  // P-intercepts
+  const dPint = qd.pCoeff !== 0 ? -qd.constant / qd.pCoeff : pStar * 2;
+  const sPint = qs.pCoeff !== 0 ? Math.max(0, -qs.constant / qs.pCoeff) : 0;
+
+  const cs = 0.5 * qStar * (dPint - pStar);
+  const ps = 0.5 * qStar * (pStar - sPint);
+  const ts = cs + ps;
+
+  const pMax = Math.ceil(dPint * 1.15 / 5) * 5;
+  const qMax = Math.ceil(qStar * 1.8  / 5) * 5;
+
+  const sweep = (parsed) => {
+    const pts = [];
+    for (let i = 0; i <= 300; i++) {
+      const P = (i / 300) * pMax;
+      const Q = parsed.pCoeff * P + parsed.constant;
+      if (Q >= 0) pts.push({x: Q, y: P});
+    }
+    return pts;
+  };
+
+  // CS triangle: (0, dPint) → (qStar, pStar) → (0, pStar) → back
+  const csShade = [{x:0, y:dPint}, {x:qStar, y:pStar}, {x:0, y:pStar}, {x:0, y:dPint}];
+  // PS triangle: (0, sPint) → (qStar, pStar) → (0, pStar) → back
+  const psShade = [{x:0, y:sPint}, {x:qStar, y:pStar}, {x:0, y:pStar}, {x:0, y:sPint}];
+
+  // Stats
+  setText('surstat-cs',  '$' + fmt(cs));
+  setText('surstat-ps',  '$' + fmt(ps));
+  setText('surstat-ts',  '$' + fmt(ts));
+  setText('surstat-eq',  `P*=$${fmt(pStar)}, Q*=${fmt(qStar)}`);
+
+  setText('an-sur-cs',   '$' + fmt(cs));
+  document.getElementById('an-sur-cs-f').textContent =
+    `½ × ${fmt(qStar)} × ($${fmt(dPint)} − $${fmt(pStar)}) = $${fmt(cs)}`;
+  setText('an-sur-ps',   '$' + fmt(ps));
+  document.getElementById('an-sur-ps-f').textContent =
+    `½ × ${fmt(qStar)} × ($${fmt(pStar)} − $${fmt(sPint)}) = $${fmt(ps)}`;
+  setText('an-sur-ts',   '$' + fmt(ts));
+  setText('an-sur-dint', '$' + fmt(dPint) + ' (max willingness to pay)');
+  setText('an-sur-sint', '$' + fmt(sPint) + ' (min willingness to accept)');
+
+  document.getElementById('sur-graph-card').style.display = 'block';
+  document.getElementById('sur-graph-card').scrollIntoView({behavior:'smooth', block:'start'});
+
+  if (surChart) { surChart.destroy(); surChart = null; }
+
+  const datasets = [
+    // CS shading — blue
+    { label:'CS', data: csShade, showLine:true, fill:true,
+      borderColor:'rgba(50,102,173,0.4)', backgroundColor:'rgba(50,102,173,0.18)',
+      pointRadius:0, borderWidth:1, tension:0 },
+    // PS shading — red/orange
+    { label:'PS', data: psShade, showLine:true, fill:true,
+      borderColor:'rgba(185,64,64,0.4)', backgroundColor:'rgba(185,64,64,0.18)',
+      pointRadius:0, borderWidth:1, tension:0 },
+    // Demand
+    { label:'D', data: sweep(qd), showLine:true, fill:false,
+      borderColor:'#3266ad', backgroundColor:'transparent', pointRadius:0, borderWidth:2.5, tension:0 },
+    // Supply
+    { label:'S', data: sweep(qs), showLine:true, fill:false,
+      borderColor:'#b94040', backgroundColor:'transparent', pointRadius:0, borderWidth:2.5, tension:0 },
+    // Equilibrium dot
+    { label:'Equilibrium', data:[{x:qStar, y:pStar}], showLine:false,
+      pointRadius:8, pointBackgroundColor:'#1a1a18', pointBorderColor:'#fff', pointBorderWidth:2.5 },
+  ];
+
+  const opts = baseOptions('Quantity (Q)', 'Price ($)', 0, qMax, 0, pMax);
+  opts.layout = { padding: { right: 55, top: 15, bottom: 20 } };
+  opts.plugins.tooltip.filter = item => !['CS','PS'].includes(item.dataset.label);
+  opts._surMeta = { pStar, qStar, dPint, sPint, cs, ps, ts, qd, qs };
+
+  surChart = new Chart(document.getElementById('surChart').getContext('2d'), {
+    type: 'scatter', data: { datasets }, options: opts
+  });
+}
+
+// ── Surplus label plugin ──────────────────────────────
+const surLabelPlugin = {
+  id: 'surLabels',
+  afterDraw(chart) {
+    const m = chart.options._surMeta;
+    if (!m) return;
+    const { pStar, qStar, dPint, sPint, cs, ps, qd, qs } = m;
+    const ctx = chart.ctx, xs = chart.scales.x, ys = chart.scales.y;
+    const ca  = chart.chartArea;
+    ctx.save();
+
+    // ── Re-draw shading triangles sharply via canvas ──────
+    // (ensures clean fill regardless of Chart.js dataset order)
+    ctx.beginPath(); ctx.rect(ca.left, ca.top, ca.right-ca.left, ca.bottom-ca.top); ctx.clip();
+    const pxX = v => xs.getPixelForValue(v);
+    const pxY = v => ys.getPixelForValue(v);
+
+    // CS triangle: (0,dPint) → (qStar,pStar) → (0,pStar)
+    ctx.beginPath();
+    ctx.moveTo(pxX(0),     pxY(dPint));
+    ctx.lineTo(pxX(qStar), pxY(pStar));
+    ctx.lineTo(pxX(0),     pxY(pStar));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(50,102,173,0.18)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(50,102,173,0.35)'; ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // PS triangle: (0,sPint) → (qStar,pStar) → (0,pStar)
+    ctx.beginPath();
+    ctx.moveTo(pxX(0),     pxY(sPint));
+    ctx.lineTo(pxX(qStar), pxY(pStar));
+    ctx.lineTo(pxX(0),     pxY(pStar));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(185,64,64,0.16)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(185,64,64,0.32)'; ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.restore();
+    ctx.save();
+
+    // ── Dashed drop-lines to equilibrium ──
+    ctx.beginPath(); ctx.setLineDash([5,4]);
+    ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 1.4;
+    ctx.moveTo(pxX(qStar), pxY(pStar)); ctx.lineTo(pxX(qStar), ca.bottom); ctx.stroke();
+    ctx.moveTo(pxX(qStar), pxY(pStar)); ctx.lineTo(ca.left,     pxY(pStar)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ── CS label — placed inside triangle, clear of center ──
+    {
+      // Triangle centroid: ((0+qStar+0)/3, (dPint+pStar+pStar)/3)
+      const cq = qStar / 3;
+      const cp = (dPint + pStar + pStar) / 3;
+      ctx.font = 'bold 13px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(30,70,160,0.88)';
+      ctx.fillText('CS', pxX(cq), pxY(cp));
+      ctx.font = '10.5px -apple-system, sans-serif';
+      ctx.fillStyle = 'rgba(30,70,160,0.7)';
+      ctx.fillText('$' + fmt(cs), pxX(cq), pxY(cp) + 15);
+    }
+
+    // ── PS label — triangle centroid ──
+    {
+      const cq = qStar / 3;
+      const cp = (sPint + pStar + pStar) / 3;
+      ctx.font = 'bold 13px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(155,40,40,0.88)';
+      ctx.fillText('PS', pxX(cq), pxY(cp));
+      ctx.font = '10.5px -apple-system, sans-serif';
+      ctx.fillStyle = 'rgba(155,40,40,0.7)';
+      ctx.fillText('$' + fmt(ps), pxX(cq), pxY(cp) + 15);
+    }
+
+    // ── Curve labels — offset from line ──
+    // D label: at 80% of Q range, positioned ABOVE the demand line
+    // S label: at 80% of Q range, positioned BELOW the supply line
+    const rightQ = xs.max * 0.80;
+    function curveP(parsed, q) {
+      return Math.abs(parsed.pCoeff) > 1e-10 ? (q - parsed.constant) / parsed.pCoeff : null;
+    }
+    const dP = curveP(qd, rightQ);
+    const sP = curveP(qs, rightQ);
+
+    ctx.font = 'bold 12.5px -apple-system, sans-serif';
+    if (dP !== null && dP >= ys.min && dP <= ys.max) {
+      ctx.fillStyle = '#2555a0';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText('D', pxX(rightQ) + 5, pxY(dP) - 3);  // above line
+    }
+    if (sP !== null && sP >= ys.min && sP <= ys.max) {
+      ctx.fillStyle = '#a03030';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('S', pxX(rightQ) + 5, pxY(sP) + 3);   // below line
+    }
+
+    // ── Axis labels ──
+    ctx.font = 'bold 10.5px -apple-system, sans-serif'; ctx.fillStyle = '#444';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText('P*', ca.left - 4, pxY(pStar));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('Q*', pxX(qStar), ca.bottom + 5);
+
+    // ── Intercept labels — placed to the right of Y-axis (inside chart) ──
+    // Max WTP label: just above and right of the Y-axis intercept
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = 'rgba(40,80,180,0.7)';
+    ctx.fillText('Max WTP', ca.left + 4, pxY(dPint) - 2);
+
+    if (sPint > ys.min + 0.5) {
+      ctx.fillStyle = 'rgba(160,40,40,0.7)';
+      ctx.textBaseline = 'top';
+      ctx.fillText('Min WTA', ca.left + 4, pxY(sPint) + 2);
+    }
+
+    ctx.restore();
+  }
+};
+Chart.register(surLabelPlugin);
+
+// ═══════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════
+function roundTo(v, dp) { return Math.round(v * 10**dp) / 10**dp; }
+function fmt(v) { return parseFloat(v.toFixed(2)).toString(); }
+function setText(id, v) { document.getElementById(id).textContent = v; }
+
+// ── Simple modal popup ───────────────────────────────
+function showModal(title, message) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent  = message;
+  document.getElementById('app-modal').style.display = 'flex';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('modal-close');
+  if (btn) btn.addEventListener('click', () => {
+    document.getElementById('app-modal').style.display = 'none';
+  });
+  document.getElementById('app-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+});
+</script>
+
+<!-- Modal overlay -->
+<div id="app-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:2rem;max-width:420px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.25);position:relative;">
+    <div id="modal-title" style="font-size:1.05rem;font-weight:700;margin-bottom:.75rem;color:#1a1a18;"></div>
+    <div id="modal-body"  style="font-size:.88rem;color:#4a4a44;line-height:1.6;margin-bottom:1.25rem;"></div>
+    <button id="modal-close" style="padding:7px 22px;background:#3266ad;color:#fff;border:none;border-radius:7px;font-size:.88rem;font-weight:600;cursor:pointer;">Got it</button>
+  </div>
+</div>
+</body>
+</html>
