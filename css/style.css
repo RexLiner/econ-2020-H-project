@@ -1,0 +1,197 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:   #3266ad;
+      --red:    #b94040;
+      --green:  #2a7a4b;
+      --purple: #7c3aab;
+      --orange: #c96a12;
+      --teal:   #1a7a7a;
+      --bg:      #f8f7f4;
+      --surface: #ffffff;
+      --border:  #e2e0d8;
+      --text:    #1a1a18;
+      --muted:   #6b6a64;
+      --radius:  10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+    }
+
+    header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 1.1rem 2rem; display: flex; align-items: baseline; gap: 1rem;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header span { font-size: 0.85rem; color: var(--muted); }
+
+    .tab-bar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; padding: 0 2rem;
+    }
+    .tab-btn {
+      padding: 0.7rem 1.2rem; font-size: 0.87rem; font-weight: 600;
+      border: none; background: none; color: var(--muted); cursor: pointer;
+      border-bottom: 3px solid transparent; margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    main { max-width: 1000px; margin: 1.5rem auto; padding: 0 1.25rem 3rem; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.4rem; margin-bottom: 1.1rem;
+    }
+    .card-title {
+      font-size: 0.93rem; font-weight: 600; margin-bottom: 1rem;
+      padding-bottom: 0.65rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .badge {
+      font-size: 0.63rem; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; padding: 2px 7px; border-radius: 20px;
+      background: var(--bg); color: var(--muted); border: 1px solid var(--border);
+    }
+
+    /* ── shared form elements ── */
+    .step-lbl {
+      font-size: 0.67rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .55rem;
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; }
+    .four-col { display: grid; grid-template-columns: repeat(4,1fr); gap: .75rem; }
+
+    .input-box {
+      background: var(--bg); border-radius: 8px; padding: .95rem 1.05rem;
+    }
+    .input-box-title {
+      font-size: .73rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: .35rem;
+    }
+    .input-box-sub { font-size: .7rem; color: var(--muted); font-style: italic; margin-bottom: .65rem; }
+
+    .eq-row { display: flex; align-items: center; gap: 7px; }
+    .eq-lbl { font-size: .98rem; font-weight: 700; white-space: nowrap; }
+
+    input[type="text"].mono-in, input[type="number"].num-in {
+      flex: 1; min-width: 0; padding: 6px 9px; font-size: .9rem;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      background: var(--surface); color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input[type="text"].mono-in { font-family: 'Courier New', monospace; }
+    input[type="number"].num-in { -moz-appearance: textfield; font-family: inherit; font-weight: 600; }
+    input[type="number"].num-in::-webkit-inner-spin-button,
+    input[type="number"].num-in::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(50,102,173,.1); }
+    input.error { border-color: var(--red) !important; }
+
+    .parse-ok  { font-size: .72rem; color: var(--green); margin-top: .4rem; min-height: 1em; }
+    .parse-err { font-size: .72rem; color: var(--red);   margin-top: .4rem; min-height: 1em; }
+
+    /* buttons */
+    .btn {
+      padding: 7px 18px; font-size: .87rem; font-weight: 600; border: none;
+      border-radius: 7px; cursor: pointer; transition: opacity .15s; white-space: nowrap;
+    }
+    .btn:hover { opacity: .87; }
+    .btn-blue   { background: var(--blue);   color: #fff; }
+    .btn-green  { background: var(--green);  color: #fff; }
+    .btn-purple { background: var(--purple); color: #fff; }
+    .btn-full   { width: 100%; padding: 9px 0; font-size: .92rem; font-weight: 700; }
+
+    .solve-row { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+    .solve-out { font-size: .87rem; color: var(--muted); flex: 1; }
+    .solve-out strong { color: var(--text); }
+
+    /* stat tiles */
+    .stat {
+      background: var(--bg); border-radius: 8px; padding: .7rem .95rem;
+    }
+    .stat-lbl { font-size: .7rem; color: var(--muted); margin-bottom: .15rem; }
+    .stat-val { font-size: 1.2rem; font-weight: 700; }
+    .stat-sub { font-size: .65rem; color: var(--muted); }
+    .stat.profit    { background: #e6f4ec; }
+    .stat.loss      { background: #faeaea; }
+    .stat.breakeven { background: #fef9e7; }
+
+    /* err */
+    .err-msg { font-size: .72rem; color: var(--red); margin-top: .4rem; min-height: 1em; }
+
+    /* ── DUAL CHART LAYOUT (matches worksheet side-by-side) ── */
+    .dual-chart-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .chart-panel { }
+    .chart-panel-title {
+      font-size: .78rem; font-weight: 700; text-align: center;
+      color: var(--muted); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .chart-wrap { position: relative; width: 100%; height: 320px; }
+
+    /* legend */
+    .legend {
+      display: flex; gap: .85rem; flex-wrap: wrap; justify-content: center;
+      margin-top: .6rem; font-size: .75rem; color: var(--muted);
+    }
+    .legend span { display: flex; align-items: center; gap: 4px; }
+    .leg-line { width: 16px; height: 3px; border-radius: 2px; }
+    .leg-dash { width: 16px; border-top: 2.5px dashed; }
+    .leg-dot  { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── Analysis box (π, Q_max, P vs ATC, entry/exit) ── */
+    .analysis-card {
+      background: #f0f5ff;
+      border: 1px solid #c3d4eb;
+      border-radius: 8px;
+      padding: 1.1rem 1.2rem;
+      margin-top: 0;
+    }
+    .analysis-title {
+      font-size: .78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--blue); margin-bottom: .85rem;
+    }
+    .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .analysis-item { }
+    .analysis-item label {
+      font-size: .72rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: .3rem;
+    }
+    .analysis-value {
+      font-size: 1.05rem; font-weight: 700; color: var(--text);
+    }
+    .analysis-formula {
+      font-size: .78rem; color: var(--muted); margin-top: .15rem;
+    }
+    .pill-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
+    .pill {
+      font-size: .78rem; font-weight: 600; padding: 3px 11px; border-radius: 20px;
+      border: 1.5px solid var(--border); color: var(--muted); background: var(--surface);
+    }
+    .pill.active-green { background: #e6f4ec; border-color: var(--green); color: var(--green); }
+    .pill.active-red   { background: #faeaea; border-color: var(--red);   color: var(--red); }
+    .pill.active-blue  { background: #e8f0fb; border-color: var(--blue);  color: var(--blue); }
+
+    /* price input section */
+    .price-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .5rem; }
+    .price-row label { font-size: .82rem; color: var(--muted); white-space: nowrap; }
+    .use-mkt-btn {
+      font-size: .73rem; color: var(--blue); background: none; border: none;
+      cursor: pointer; text-decoration: underline; padding: 0; display: block; margin-top: .25rem;
+    }
+
+    @media (max-width: 680px) {
+      .two-col, .three-col, .four-col, .dual-chart-wrap, .analysis-grid { grid-template-columns: 1fr; }
+      .chart-wrap { height: 260px; }
+    }

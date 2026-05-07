@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Microeconomics Explorer — Econ 2020</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>Microeconomics Explorer</h1>
+  <span>Econ 2020 — Honors Project</span>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('market', this)">📈 Market Equilibrium</button>
+  <button class="tab-btn" onclick="showTab('firm', this)">🏢 Monopoly Analysis</button>
+  <button class="tab-btn" onclick="showTab('controls', this)">📉 Price Controls</button>
+  <button class="tab-btn" onclick="showTab('surplus', this)">📐 Surplus &amp; Welfare</button>
+</div>
+
+<main>
+
+  <!-- ════════════════════════════════════
+       TAB 1 — MARKET EQUILIBRIUM
+  ════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-market">
+
+    <div class="card">
+      <div class="card-title">Step 1 — Enter Equations <span class="badge">as functions of P</span></div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Quantity Demanded (Qd)</div>
+          <div class="input-box-sub">e.g. −2P + 12 &nbsp;·&nbsp; 10 − 3P</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">Qd =</span>
+            <input class="mono-in" id="qd-eq" type="text" placeholder="-2P + 12" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="qd-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Quantity Supplied (Qs)</div>
+          <div class="input-box-sub">e.g. 2P − 2 &nbsp;·&nbsp; 0.5P + 1</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">Qs =</span>
+            <input class="mono-in" id="qs-eq" type="text" placeholder="2P - 2" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="qs-preview"></div>
+        </div>
+      </div>
+      <div class="step-lbl">Step 2 — Solve for equilibrium</div>
+      <div class="solve-row">
+        <button class="btn btn-blue" onclick="solveEquilibrium()">Solve for P* and Q*</button>
+        <div class="solve-out" id="solve-output">Enter both equations above, then click Solve.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Step 2 — Confirm Values &amp; Generate Graph</div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Equilibrium Price</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">P* =</span>
+            <input class="num-in" id="p-star" type="number" placeholder="—" step="any">
+          </div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Equilibrium Quantity</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">Q* =</span>
+            <input class="num-in" id="q-star" type="number" placeholder="—" step="any">
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="drawMarketGraph()">Generate Market Graph</button>
+      <div class="err-msg" id="market-err"></div>
+    </div>
+
+    <div class="card" id="market-graph-card" style="display:none;">
+      <div class="card-title">Market Supply &amp; Demand</div>
+      <div class="three-col" style="margin-bottom:1.1rem;">
+        <div class="stat">
+          <div class="stat-lbl">Market Price</div>
+          <div class="stat-val" id="mstat-p">—</div>
+          <div class="stat-sub">P*</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Market Quantity</div>
+          <div class="stat-val" id="mstat-q">—</div>
+          <div class="stat-sub">Q*</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Total Revenue</div>
+          <div class="stat-val" id="mstat-tr">—</div>
+          <div class="stat-sub">P* × Q*</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="marketChart"></canvas></div>
+      <div class="legend">
+        <span><span class="leg-line" style="background:var(--blue);"></span>Demand (D)</span>
+        <span><span class="leg-line" style="background:var(--red);"></span>Supply (S)</span>
+        <span><span class="leg-dot" style="background:#1a1a18;"></span>Equilibrium (P*, Q*)</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 2 — MONOPOLY ANALYSIS
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-firm">
+
+    <!-- Step 1: Enter equations -->
+    <div class="card">
+      <div class="card-title">Step 1 — Enter Equations <span class="badge">as functions of Q</span></div>
+
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Demand (P as function of Q)</div>
+          <div class="input-box-sub">e.g.&nbsp; 12 − 2Q &nbsp;·&nbsp; 10 − Q &nbsp;·&nbsp; 20 − 3Q</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">P =</span>
+            <input class="mono-in" id="mon-demand" type="text" placeholder="12 - 2Q" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="mon-d-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--purple);">Marginal Revenue (MR as function of Q)</div>
+          <div class="input-box-sub">For linear demand P = a − bQ, MR = a − 2bQ. e.g. 12 − 4Q</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--purple);">MR =</span>
+            <input class="mono-in" id="mon-mr" type="text" placeholder="12 - 4Q" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="mon-mr-preview"></div>
+          <button class="use-mkt-btn" onclick="autoMR()">⚡ Auto-derive MR from Demand</button>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Marginal Cost (MC)</div>
+          <div class="input-box-sub">Can be a constant or function of Q. e.g.&nbsp; 4 &nbsp;·&nbsp; 2Q + 1</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">MC =</span>
+            <input class="mono-in" id="mon-mc" type="text" placeholder="4" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="mon-mc-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--orange);">Average Total Cost (ATC) <span style="font-weight:400;font-style:italic;">optional</span></div>
+          <div class="input-box-sub">e.g.&nbsp; 4 &nbsp;·&nbsp; Q + 4 &nbsp;·&nbsp; 10/Q + 2. Leave blank if same as MC.</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--orange);">ATC =</span>
+            <input class="mono-in" id="mon-atc" type="text" placeholder="4  (or leave blank)" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="mon-atc-preview"></div>
+        </div>
+      </div>
+
+      <div class="step-lbl">Step 2 — Solve for Q<sub>max</sub> (where MR = MC)</div>
+      <div class="solve-row">
+        <button class="btn btn-purple" onclick="solveMonopoly()">Solve Qmax &amp; P*</button>
+        <div class="solve-out" id="mon-solve-out">Enter equations above, then click Solve.</div>
+      </div>
+    </div>
+
+    <!-- Step 2: Confirm values -->
+    <div class="card">
+      <div class="card-title">Step 2 — Confirm or Override Values</div>
+      <div class="input-box-sub" style="margin-bottom:.9rem;">Values are auto-filled after solving. You can override any of them manually.</div>
+
+      <div class="four-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--purple);">Q<sub>max</sub></div>
+          <div class="input-box-sub">Where MR = MC</div>
+          <div class="price-row">
+            <label>Q<sub>max</sub> =</label>
+            <input class="num-in" id="mon-qmax" type="number" placeholder="—" step="any" style="flex:1;">
+          </div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">P* (Monopoly Price)</div>
+          <div class="input-box-sub">From Demand at Q<sub>max</sub></div>
+          <div class="price-row">
+            <label>P* =</label>
+            <input class="num-in" id="mon-pstar" type="number" placeholder="—" step="any" style="flex:1;">
+          </div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">MC at Q<sub>max</sub></div>
+          <div class="input-box-sub">= MR at Q<sub>max</sub></div>
+          <div class="price-row">
+            <label>MC =</label>
+            <input class="num-in" id="mon-mc-val" type="number" placeholder="—" step="any" style="flex:1;">
+          </div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--orange);">ATC at Q<sub>max</sub></div>
+          <div class="input-box-sub">Used to shade profit π</div>
+          <div class="price-row">
+            <label>ATC =</label>
+            <input class="num-in" id="mon-atc-val" type="number" placeholder="—" step="any" style="flex:1;">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-purple btn-full" onclick="drawMonopolyGraph()">Generate Monopoly Graph</button>
+      <div class="err-msg" id="mon-err"></div>
+    </div>
+
+    <!-- Graph output -->
+    <div class="card" id="mon-graph-card" style="display:none;">
+      <div class="card-title">Monopoly Graph</div>
+
+      <div class="four-col" style="margin-bottom:1.1rem;">
+        <div class="stat">
+          <div class="stat-lbl">Q<sub>max</sub> (MR = MC)</div>
+          <div class="stat-val" id="mstat-qmax">—</div>
+          <div class="stat-sub">Profit-max quantity</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Monopoly Price P*</div>
+          <div class="stat-val" id="mstat-pstar">—</div>
+          <div class="stat-sub">From demand at Q<sub>max</sub></div>
+        </div>
+        <div class="stat" id="mstat-profit-tile">
+          <div class="stat-lbl">Profit (π)</div>
+          <div class="stat-val" id="mstat-profit">—</div>
+          <div class="stat-sub" id="mstat-profit-formula">π = Q(P* − ATC)</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">DWL</div>
+          <div class="stat-val" id="mstat-dwl">—</div>
+          <div class="stat-sub">½ × base × height</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap" style="height:460px;"><canvas id="monChart"></canvas></div>
+
+      <!-- Price Ceiling sub-section -->
+      <div class="card" style="margin-top:1rem; border:1px solid #c3d4eb; background:#f5f8ff;">
+        <div class="card-title" style="color:var(--blue);">Price Ceiling on This Market <span class="badge">optional — Figure 2</span></div>
+        <div class="input-box-sub" style="margin-bottom:.85rem;">Uses your solved monopoly numbers. Enter a ceiling price to see its effect on this market — shortage, DWL shift, and who's helped vs. left out.</div>
+        <div class="two-col" style="margin-bottom:1rem;">
+          <div class="input-box">
+            <div class="input-box-title" style="color:var(--blue);">Ceiling Price</div>
+            <div class="input-box-sub">Set below P* = monopoly price to be binding. e.g. $35</div>
+            <div class="price-row">
+              <label>Ceiling P =</label>
+              <input class="num-in" id="mon-ceiling" type="number" placeholder="e.g. 35" min="0" step="any" style="flex:1;">
+            </div>
+          </div>
+          <div class="input-box" style="display:flex;flex-direction:column;justify-content:center;gap:.5rem;">
+            <div class="stat-lbl" style="font-size:.75rem;color:var(--muted);">Auto-pulled from your monopoly solution above:</div>
+            <div style="font-size:.82rem;color:var(--text);">P* = <strong><span id="mon-ceil-pstar">—</span></strong> &nbsp;|&nbsp; Qmax = <strong><span id="mon-ceil-qmax">—</span></strong> &nbsp;|&nbsp; Qcomp = <strong><span id="mon-ceil-qcomp">—</span></strong></div>
+            <div style="font-size:.78rem;color:var(--muted);">Solve the monopoly graph first, then set a ceiling.</div>
+          </div>
+        </div>
+        <button class="btn btn-blue btn-full" onclick="drawMonCeiling()">Generate Price Ceiling Graph</button>
+        <div class="err-msg" id="mon-ceil-err"></div>
+        <div id="mon-ceil-graph-wrap" style="display:none; margin-top:1rem;">
+          <div class="two-col" style="margin-bottom:1rem;">
+            <div class="stat">
+              <div class="stat-lbl">Ceiling Price</div>
+              <div class="stat-val" id="mcs-ceiling">—</div>
+              <div class="stat-sub" id="mcs-binding-sub">Binding below P*</div>
+            </div>
+            <div class="stat loss">
+              <div class="stat-lbl">Shortage (Qd − Qs)</div>
+              <div class="stat-val" id="mcs-shortage">—</div>
+              <div class="stat-sub">At ceiling price</div>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:440px;"><canvas id="monCeilChart"></canvas></div>
+          <div class="legend" style="margin-top:.75rem;">
+            <span><span class="leg-line" style="background:var(--blue);"></span>Demand (D)</span>
+            <span><span class="leg-line" style="background:var(--purple);"></span>MR</span>
+            <span><span class="leg-line" style="background:var(--red);"></span>MC = Supply</span>
+            <span><span class="leg-line" style="background:#c00; display:inline-block; height:3px; width:16px; border-top:3px solid #c00;"></span>Price Ceiling</span>
+            <span><span class="leg-dot" style="background:#1a1a18;"></span>Qmax</span>
+            <span><span class="leg-dot" style="background:var(--green);"></span>Qcomp</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis -->
+      <div class="analysis-card" style="margin-top:1rem;">
+        <div class="analysis-title">📊 Monopoly Analysis</div>
+        <div class="analysis-grid">
+          <div class="analysis-item">
+            <label>Profit / Loss (π)</label>
+            <div class="analysis-value" id="an-mon-profit">—</div>
+            <div class="analysis-formula" id="an-mon-profit-formula"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Deadweight Loss (DWL)</label>
+            <div class="analysis-value" id="an-mon-dwl">—</div>
+            <div class="analysis-formula" id="an-mon-dwl-formula">½ × (Q_comp − Q_max) × (P* − MC)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Competitive Equilibrium (for reference)</label>
+            <div class="analysis-value" id="an-mon-comp">—</div>
+            <div class="analysis-formula">Where D = MC (P = MC)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Long-run profits?</label>
+            <div class="analysis-value">Yes — monopoly maintains barriers to entry</div>
+            <div class="analysis-formula">No new firms can enter to compete away profit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ════════════════════════════════════
+       TAB 3 — PRICE CONTROLS
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-controls">
+
+    <div class="card">
+      <div class="card-title">Step 1 — Enter Market Equations <span class="badge">as functions of P</span></div>
+      <div class="input-box-sub" style="margin-bottom:.85rem;">Uses the same format as the Market Equilibrium tab. If you already solved it there, just re-enter or copy the equations.</div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Quantity Demanded (Qd)</div>
+          <div class="input-box-sub">e.g. −2P + 12 &nbsp;·&nbsp; −10P + 250</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">Qd =</span>
+            <input class="mono-in" id="pc-qd" type="text" placeholder="-2P + 12" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="pc-qd-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Quantity Supplied (Qs)</div>
+          <div class="input-box-sub">e.g. 2P − 2 &nbsp;·&nbsp; 10P + 50</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">Qs =</span>
+            <input class="mono-in" id="pc-qs" type="text" placeholder="2P - 2" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="pc-qs-preview"></div>
+        </div>
+      </div>
+      <div class="solve-row">
+        <button class="btn btn-blue" onclick="pcSolveEq()">Find Equilibrium P* &amp; Q*</button>
+        <div class="solve-out" id="pc-eq-out">Enter equations, then find equilibrium first.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Step 2 — Set Price Control</div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box" style="background:#fff0f0; border:1px solid #f0c0c0;">
+          <div class="input-box-title" style="color:var(--red);">🔴 Price Ceiling</div>
+          <div class="input-box-sub">A <strong>maximum</strong> price set <em>below</em> equilibrium. Creates a <strong>shortage</strong> (Qd &gt; Qs).</div>
+          <div class="price-row">
+            <label>Ceiling P =</label>
+            <input class="num-in" id="pc-ceiling" type="number" placeholder="e.g. 3" min="0" step="any" style="flex:1;">
+          </div>
+          <button class="use-mkt-btn" onclick="pcSetType('ceiling')">▶ Use Price Ceiling</button>
+        </div>
+        <div class="input-box" style="background:#f0f5ff; border:1px solid #c0d0f0;">
+          <div class="input-box-title" style="color:var(--blue);">🔵 Price Floor</div>
+          <div class="input-box-sub">A <strong>minimum</strong> price set <em>above</em> equilibrium. Creates a <strong>surplus</strong> (Qs &gt; Qd).</div>
+          <div class="price-row">
+            <label>Floor P =</label>
+            <input class="num-in" id="pc-floor" type="number" placeholder="e.g. 6" min="0" step="any" style="flex:1;">
+          </div>
+          <button class="use-mkt-btn" onclick="pcSetType('floor')">▶ Use Price Floor</button>
+        </div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="drawPriceControl()">Generate Price Control Graph</button>
+      <div class="err-msg" id="pc-err"></div>
+    </div>
+
+    <div class="card" id="pc-graph-card" style="display:none;">
+      <div class="card-title" id="pc-graph-title">Price Control Graph</div>
+
+      <div class="four-col" style="margin-bottom:1.1rem;">
+        <div class="stat">
+          <div class="stat-lbl">Free Market P*</div>
+          <div class="stat-val" id="pcstat-pstar">—</div>
+          <div class="stat-sub">Equilibrium price</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Controlled Price</div>
+          <div class="stat-val" id="pcstat-pctrl">—</div>
+          <div class="stat-sub" id="pcstat-type">Ceiling / Floor</div>
+        </div>
+        <div class="stat" id="pcstat-gap-tile">
+          <div class="stat-lbl" id="pcstat-gap-lbl">Shortage / Surplus</div>
+          <div class="stat-val" id="pcstat-gap">—</div>
+          <div class="stat-sub" id="pcstat-gap-sub">Qs − Qd at controlled price</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Deadweight Loss</div>
+          <div class="stat-val" id="pcstat-dwl">—</div>
+          <div class="stat-sub">½ × ΔQ × ΔP</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap" style="height:420px;"><canvas id="pcChart"></canvas></div>
+
+      <div class="analysis-card" style="margin-top:1rem;">
+        <div class="analysis-title" id="pc-analysis-title">📊 Price Control Analysis</div>
+        <div class="analysis-grid">
+          <div class="analysis-item">
+            <label>Quantity Demanded at Controlled Price</label>
+            <div class="analysis-value" id="an-pc-qd">—</div>
+            <div class="analysis-formula" id="an-pc-qd-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Quantity Supplied at Controlled Price</label>
+            <div class="analysis-value" id="an-pc-qs">—</div>
+            <div class="analysis-formula" id="an-pc-qs-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label id="an-pc-gap-lbl">Shortage / Surplus</label>
+            <div class="analysis-value" id="an-pc-gap">—</div>
+            <div class="analysis-formula" id="an-pc-gap-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Deadweight Loss (DWL)</label>
+            <div class="analysis-value" id="an-pc-dwl">—</div>
+            <div class="analysis-formula" id="an-pc-dwl-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Is the control binding?</label>
+            <div class="analysis-value" id="an-pc-binding">—</div>
+            <div class="analysis-formula" id="an-pc-binding-f"></div>
+          </div>
+          <div class="analysis-item">
+            <label>Who benefits / who is hurt?</label>
+            <div class="analysis-value" id="an-pc-who">—</div>
+            <div class="analysis-formula" id="an-pc-who-f"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 4 — SURPLUS & WELFARE
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-surplus">
+
+    <div class="card">
+      <div class="card-title">Enter Market Equations <span class="badge">as functions of P</span></div>
+      <div class="input-box-sub" style="margin-bottom:.85rem;">Same format as Market Equilibrium tab.</div>
+      <div class="two-col" style="margin-bottom:1rem;">
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--blue);">Quantity Demanded (Qd)</div>
+          <div class="input-box-sub">e.g. −2P + 12</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--blue);">Qd =</span>
+            <input class="mono-in" id="sur-qd" type="text" placeholder="-2P + 12" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="sur-qd-preview"></div>
+        </div>
+        <div class="input-box">
+          <div class="input-box-title" style="color:var(--red);">Quantity Supplied (Qs)</div>
+          <div class="input-box-sub">e.g. 2P − 2</div>
+          <div class="eq-row">
+            <span class="eq-lbl" style="color:var(--red);">Qs =</span>
+            <input class="mono-in" id="sur-qs" type="text" placeholder="2P - 2" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="parse-ok" id="sur-qs-preview"></div>
+        </div>
+      </div>
+      <div class="solve-row" style="margin-bottom:1rem;">
+        <button class="btn btn-blue" onclick="surSolve()">Solve &amp; Calculate Surplus</button>
+        <div class="solve-out" id="sur-solve-out">Enter both equations, then click Solve.</div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="drawSurplusGraph()">Generate Surplus Graph</button>
+      <div class="err-msg" id="sur-err"></div>
+    </div>
+
+    <div class="card" id="sur-graph-card" style="display:none;">
+      <div class="card-title">Consumer &amp; Producer Surplus</div>
+
+      <div class="four-col" style="margin-bottom:1.1rem;">
+        <div class="stat" style="background:#e8f0fb;">
+          <div class="stat-lbl">Consumer Surplus (CS)</div>
+          <div class="stat-val" id="surstat-cs">—</div>
+          <div class="stat-sub">½ × Q* × (P_max − P*)</div>
+        </div>
+        <div class="stat" style="background:#fdecea;">
+          <div class="stat-lbl">Producer Surplus (PS)</div>
+          <div class="stat-val" id="surstat-ps">—</div>
+          <div class="stat-sub">½ × Q* × (P* − P_min)</div>
+        </div>
+        <div class="stat" style="background:#e8f5ee;">
+          <div class="stat-lbl">Total Surplus (TS)</div>
+          <div class="stat-val" id="surstat-ts">—</div>
+          <div class="stat-sub">CS + PS</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Equilibrium P* / Q*</div>
+          <div class="stat-val" id="surstat-eq">—</div>
+          <div class="stat-sub">Market clears here</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap" style="height:420px;"><canvas id="surChart"></canvas></div>
+
+      <div class="analysis-card" style="margin-top:1rem;">
+        <div class="analysis-title">📐 Surplus Analysis</div>
+        <div class="analysis-grid">
+          <div class="analysis-item">
+            <label>Consumer Surplus (CS)</label>
+            <div class="analysis-value" id="an-sur-cs">—</div>
+            <div class="analysis-formula" id="an-sur-cs-f">½ × Q* × (Demand intercept − P*)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Producer Surplus (PS)</label>
+            <div class="analysis-value" id="an-sur-ps">—</div>
+            <div class="analysis-formula" id="an-sur-ps-f">½ × Q* × (P* − Supply intercept)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Total Surplus</label>
+            <div class="analysis-value" id="an-sur-ts">—</div>
+            <div class="analysis-formula">CS + PS — maximized at free market equilibrium</div>
+          </div>
+          <div class="analysis-item">
+            <label>Demand intercept (max WTP)</label>
+            <div class="analysis-value" id="an-sur-dint">—</div>
+            <div class="analysis-formula">Price where Qd = 0 (highest willingness to pay)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Supply intercept (min WTA)</label>
+            <div class="analysis-value" id="an-sur-sint">—</div>
+            <div class="analysis-formula">Price where Qs = 0 (lowest seller acceptable price)</div>
+          </div>
+          <div class="analysis-item">
+            <label>Efficiency</label>
+            <div class="analysis-value">Allocatively Efficient</div>
+            <div class="analysis-formula">Free market maximizes total surplus — no DWL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</main>
+<!-- Modal overlay -->
+<div id="app-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:2rem;max-width:420px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.25);position:relative;">
+    <div id="modal-title" style="font-size:1.05rem;font-weight:700;margin-bottom:.75rem;color:#1a1a18;"></div>
+    <div id="modal-body"  style="font-size:.88rem;color:#4a4a44;line-height:1.6;margin-bottom:1.25rem;"></div>
+    <button id="modal-close" style="padding:7px 22px;background:#3266ad;color:#fff;border:none;border-radius:7px;font-size:.88rem;font-weight:600;cursor:pointer;">Got it</button>
+  </div>
+</div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/parsers.js"></script>
+  <script src="js/market.js"></script>
+  <script src="js/monopoly.js"></script>
+  <script src="js/controls.js"></script>
+</body>
+</html>
